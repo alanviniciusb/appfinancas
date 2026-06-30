@@ -460,15 +460,15 @@
             alert('🔄 Dados sincronizados e restaurados com sucesso a partir do backup!');
             sessionStorage.removeItem('backup_sucesso');
         }
+        
         // Registra o Service Worker para habilitar a instalação como PWA
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('Service Worker ativo com sucesso!', reg))
-            .catch(err => console.log('Erro ao registrar Service Worker:', err));
-    });
-}
-
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker ativo com sucesso!', reg))
+                    .catch(err => console.log('Erro ao registrar Service Worker:', err));
+            });
+        }
 
         inputRendaVal.addEventListener('input', () => { inputRendaVal.value = inputRendaVal.value.replace(/[^0-9+\-*/(),.]/g, ""); });
         inputGastoVal.addEventListener('input', () => { inputGastoVal.value = inputGastoVal.value.replace(/[^0-9+\-*/(),.]/g, ""); });
@@ -579,7 +579,7 @@ if ('serviceWorker' in navigator) {
         secao.style.display = secao.style.display === 'block' ? 'none' : 'block';
     }
 
-    async function ejecutarAlteracaoSenha() {
+    async function executarAlteracaoSenha() {
         const atual = document.getElementById('pwd-atual').value;
         const nova = document.getElementById('pwd-nova').value;
         const confirma = document.getElementById('pwd-confirma').value;
@@ -998,7 +998,7 @@ if ('serviceWorker' in navigator) {
         const partes = filtroAtual.split('-');
         const dataAnterior = new Date(parseInt(partes[0]), parseInt(partes[1]) - 2, 1);
         const filtroAnterior = `${dataAnterior.getFullYear()}-${String(dataAnterior.getMonth() + 1).padStart(2, '0')}`;
-        const totalGastoAnteriorEfetivo = (appDados.gastos || []).filter(i => i.data && i.data.startsWith(filtroAnterior) && i.data <= hojeStr).reduce((s, i) => s + i.valor, 0);
+        const totalGastoAnteriorEfetivo = (appDados.gastos || []).filter(i => i.data && i.data.startsWith(filterior) && i.data <= hojeStr).reduce((s, i) => s + i.valor, 0);
 
         const elComp = document.getElementById('txt-comparativo');
         if (elComp) {
@@ -1045,7 +1045,7 @@ if ('serviceWorker' in navigator) {
 
             gastosFiltrados.reverse().forEach(i => {
                 const categorias = appDados.categoriasEstruturadas || {};
-                const catPaiInfo = categorias[i.catPai] || { icone: "📦", nome: "Outros" };
+                const catPaiInfo = categories[i.catPai] || { icone: "📦", nome: "Outros" };
                 const catSubInfo = (catPaiInfo.subcategorias && i.catSub) ? (catPaiInfo.subcategorias[i.catSub] || { icone: "🔹", nome: "" }) : { icone: "🔹", nome: "" };
                 
                 const ehFuturo = i.data > hojeStr;
