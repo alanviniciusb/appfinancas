@@ -491,6 +491,17 @@ if ('serviceWorker' in navigator) {
         atualizarTela();
         
         document.getElementById('filtro-mes-ano').addEventListener('change', atualizarTela);
+        // Monitora quando o usuário sai do app e quando retorna
+        document.addEventListener('visibilitychange', () => {
+            // Se o estado da página mudou para 'visible' (o usuário voltou para o app)
+            if (document.visibilityState === 'visible') {
+                // Só ativa o bloqueio se o usuário já tiver uma senha configurada no banco
+                if (appDados && appDados.senha) {
+                    configurarTelaSenha('login');
+                }
+            }
+        }); 
+    });
     });
 
     function alternarTema() {
