@@ -578,7 +578,7 @@
         secao.style.display = secao.style.display === 'block' ? 'none' : 'block';
     }
 
-    async function executarAlteracaoSenha() {
+    async function ejecutarAlteracaoSenha() {
         const atual = document.getElementById('pwd-atual').value;
         const nova = document.getElementById('pwd-nova').value;
         const confirma = document.getElementById('pwd-confirma').value;
@@ -903,7 +903,7 @@
         const filtroAtual = document.getElementById('filtro-mes-ano').value;
         const hojeStr = obterDataHoje();
 
-        const gastosMesEfetivos = appDados.gastos.filter(i => i.data.startsWith(filtroAtual) && i.data <= hojeStr);
+        const gastosMesEfetivos = (appDados.gastos || []).filter(i => i.data && i.data.startsWith(filtroAtual) && i.data <= hojeStr);
         const totalGasto = gastosMesEfetivos.reduce((s, i) => s + i.valor, 0);
 
         if (totalGasto === 0) {
@@ -972,8 +972,8 @@
             elSaldo.className = saldoMesEfetivo >= 0 ? 'saldo-positivo' : 'saldo-negativo';
         }
 
-        const globalEntradasEfetivas = (appDados.entradas || []).filter(i => i.data <= hojeStr).reduce((sum, item) => sum + item.valor, 0);
-        const globalGastosEfetivos = (appDados.gastos || []).filter(i => i.data <= hojeStr).reduce((sum, item) => sum + item.valor, 0);
+        const globalEntradasEfetivas = (appDados.entradas || []).filter(i => i.data && i.data <= hojeStr).reduce((sum, item) => sum + item.valor, 0);
+        const globalGastosEfetivos = (appDados.gastos || []).filter(i => i.data && i.data <= hojeStr).reduce((sum, item) => sum + item.valor, 0);
         const saldoAcumuladoGlobal = globalEntradasEfetivas - globalGastosEfetivos;
 
         const elSaldoAcumulado = document.getElementById('txt-saldo-acumulado');
