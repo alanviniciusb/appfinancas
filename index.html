@@ -491,11 +491,10 @@
         atualizarTela();
         
         document.getElementById('filtro-mes-ano').addEventListener('change', atualizarTela);
+        
         // Monitora quando o usuário sai do app e quando retorna
         document.addEventListener('visibilitychange', () => {
-            // Se o estado da página mudou para 'visible' (o usuário voltou para o app)
             if (document.visibilityState === 'visible') {
-                // Só ativa o bloqueio se o usuário já tiver uma senha configurada no banco
                 if (appDados && appDados.senha) {
                     configurarTelaSenha('login');
                 }
@@ -589,7 +588,7 @@
 
         appDados.senha = nova;
         await salvarNoDB();
-        alert('Senha alteredada com sucesso!');
+        alert('Senha alterada com sucesso!');
         document.getElementById('pwd-atual').value = ''; document.getElementById('pwd-nova').value = ''; document.getElementById('pwd-confirma').value = '';
         toggleMenu('secao-alterar-senha');
     }
@@ -608,22 +607,18 @@
             return alert("Não há registros de entradas ou gastos para exportar.");
         }
 
-        // Cabeçalho da tabela formatado para Excel em Português
         let csvContent = "Data;Tipo;Descrição/Origem;Categoria;Subcategoria;Valor\n";
 
-        // Adiciona as Entradas no corpo do arquivo
         (appDados.entradas || []).forEach(i => {
             const dataInvertida = i.data ? i.data.split('-').reverse().join('/') : '';
             const valorPtBr = i.valor ? i.valor.toFixed(2).replace('.', ',') : '0,00';
             csvContent += `${dataInvertida};Entrada;${i.origem || 'Entrada'};Receita;;R$ ${valorPtBr}\n`;
         });
 
-        // Adiciona os Gastos no corpo do arquivo
         (appDados.gastos || []).forEach(i => {
             const dataInvertida = i.data ? i.data.split('-').reverse().join('/') : '';
             const valorPtBr = i.valor ? i.valor.toFixed(2).replace('.', ',') : '0,00';
             
-            // Busca o nome real das categorias mapeadas para evitar exibir apenas IDs estranhos
             const catInfo = appDados.categoriasEstruturadas[i.catPai] || { nome: "Outros" };
             const subInfo = (catInfo.subcategorias && i.catSub) ? (catInfo.subcategorias[i.catSub] || { nome: "" }) : { nome: "" };
             const descExibir = i.desc || i.descricao || "Gasto";
@@ -631,7 +626,6 @@
             csvContent += `${dataInvertida};Gasto;${descExibir};${catInfo.nome};${subInfo.nome};R$ ${valorPtBr}\n`;
         });
 
-        // O caractere '\ufeff' garante que o Excel reconheça a codificação UTF-8 e exiba acentos corretamente
         const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const downloadAnchor = document.createElement('a');
@@ -998,7 +992,7 @@
         const partes = filtroAtual.split('-');
         const dataAnterior = new Date(parseInt(partes[0]), parseInt(partes[1]) - 2, 1);
         const filtroAnterior = `${dataAnterior.getFullYear()}-${String(dataAnterior.getMonth() + 1).padStart(2, '0')}`;
-        const totalGastoAnteriorEfetivo = (appDados.gastos || []).filter(i => i.data && i.data.startsWith(filterior) && i.data <= hojeStr).reduce((s, i) => s + i.valor, 0);
+        const totalGastoAnteriorEfetivo = (appDados.gastos || []).filter(i => i.data && i.data.startsWith(filtroAnterior) && i.data <= hojeStr).reduce((s, i) => s + i.valor, 0);
 
         const elComp = document.getElementById('txt-comparativo');
         if (elComp) {
@@ -1045,7 +1039,7 @@
 
             gastosFiltrados.reverse().forEach(i => {
                 const categorias = appDados.categoriasEstruturadas || {};
-                const catPaiInfo = categories[i.catPai] || { icone: "📦", nome: "Outros" };
+                const catPaiInfo = categorias[i.catPai] || { icone: "📦", nome: "Outros" };
                 const catSubInfo = (catPaiInfo.subcategorias && i.catSub) ? (catPaiInfo.subcategorias[i.catSub] || { icone: "🔹", nome: "" }) : { icone: "🔹", nome: "" };
                 
                 const ehFuturo = i.data > hojeStr;
