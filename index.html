@@ -1061,7 +1061,21 @@ async function criarSubcategoria() {
         else if (totalGastoEfetivo > 0) pctConsumo = 100;
         
         if (document.getElementById('txt-pct-consumo')) document.getElementById('txt-pct-consumo').innerText = `${pctConsumo}%`;
-        if (document.getElementById('bar-pct-consumo')) document.getElementById('bar-pct-consumo').style.width = `${Math.min(pctConsumo, 100)}%`;
+
+        const barraConsumo = document.getElementById('bar-pct-consumo');
+        if (barraConsumo) {
+    // 1. Atualiza a largura da barra
+           barraConsumo.style.width = `${Math.min(pctConsumo, 100)}%`;
+    
+    // 2. Altera a cor dinamicamente baseada na porcentagem gasta
+          if (pctConsumo < 70) {
+              barraConsumo.style.backgroundColor = "var(--primary)"; // Verde (Seguro)
+        } else if (pctConsumo >= 70 && pctConsumo < 90) {
+              barraConsumo.style.backgroundColor = "var(--warning)"; // Amarelo (Atenção)
+        } else {
+              barraConsumo.style.backgroundColor = "var(--danger)";  // Vermelho (Crítico)
+    }
+}
 
         const partes = filtroAtual.split('-');
         const dataAnterior = new Date(parseInt(partes[0]), parseInt(partes[1]) - 2, 1);
