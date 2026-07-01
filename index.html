@@ -170,10 +170,6 @@
         
         <p id="txt-saldo-acumulado" style="margin: 0;">R$ 0,00</p> 
         
-        <button id="btn-janela-saldo" onclick="alternarVisibilidadeSaldo()" style="background: none; border: none; cursor: pointer; font-size: 22px; padding: 0; line-height: 1;">
-            🙈
-        </button>
-        
     </div>
         </div>
         <p style="font-size:0.8rem; color:#7f8c8d; margin: 5px 0 0 0; text-align: right;">(Desconsidera valores futuros agendados)</p>
@@ -355,15 +351,7 @@
 </div>
 
 <script>
-    let saldoOculto = true;
-    function alternarVisibilidadeSaldo() {
-        saldoOculto = !saldoOculto; 
-        
-        const btn = document.getElementById('btn-janela-saldo');
-        if (btn) {
-            btn.innerText = saldoOculto ? "🙈" : "👁️"; 
-        }
-        
+            
         atualizarTela(); 
     }
     let appDados = { 
@@ -1070,10 +1058,10 @@ async function criarSubcategoria() {
         const saldoAcumuladoGlobal = globalEntradasEfetivas - globalGastosEfetivos;
 
         const elSaldoAcumulado = document.getElementById('txt-saldo-acumulado');
-        if (elSaldoAcumulado) {
-            elSaldoAcumulado.innerText = saldoAcumuladoGlobal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-            elSaldoAcumulado.className = saldoAcumuladoGlobal >= 0 ? 'saldo-positivo' : 'saldo-negativo';
-        }
+if (elSaldoAcumulado) {
+    elSaldoAcumulado.innerText = saldoAcumuladoGlobal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+    elSaldoAcumulado.className = saldoAcumuladoGlobal >= 0 ? 'saldo-positivo' : 'saldo-negativo';
+}
 
         let pctConsumo = 0;
         if (totalRecebidoEfetivo > 0) pctConsumo = Math.round((totalGastoEfetivo / totalRecebidoEfetivo) * 100);
