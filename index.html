@@ -721,20 +721,54 @@
 }
 
     async function criarCategoriaPrincipal() {
-        const nome = document.getElementById('cat-nome').value.trim();
-        if (!nome) return;
-        appDados.categoriasEstruturadas['cat_' + Date.now()] = { nome, icone, subcategorias: {} };
-        await salvarNoDB(); atualizarSelectsCategorias(); atualizarFiltrosCategoriasBusca();
-    }
+    const nomeInput = document.getElementById('cat-nome');
+    const nome = nomeInput.value.trim();
+    if (!nome) return alert("Por favor, digite o nome da categoria.");
+    
+    // Define um ícone padrão de pasta para a categoria principal usar nos menus
+    const icone = "📁"; 
+    
+    appDados.categoriasEstruturadas['cat_' + Date.now()] = { nome, icone, subcategorias: {} };
+    
+    await salvarNoDB(); 
+    
+    // 1. LIMPA O INPUT
+    nomeInput.value = ''; 
+    
+    // Atualiza o sistema
+    atualizarSelectsCategorias(); 
+    atualizarFiltrosCategoriasBusca();
+    atualizarTela();
+    
+    // 2. EXIBE O ALERTA
+    alert("📁 Categoria principal criada com sucesso!");
+}
 
-    async function criarSubcategoria() {
-        const idPai = document.getElementById('select-cat-pai').value;
-        const nome = document.getElementById('subcat-nome').value.trim();
-        const icone = document.getElementById('subcat-icone').value.trim() || "🔹";
-        if (!idPai || !nome) return;
-        appDados.categoriasEstruturadas[idPai].subcategorias['sub_' + Date.now()] = { nome, icone };
-        await salvarNoDB(); atualizarSelectSubcategorias();
-    }
+async function criarSubcategoria() {
+    const idPai = document.getElementById('select-cat-pai').value;
+    const nomeInput = document.getElementById('subcat-nome');
+    const iconeInput = document.getElementById('subcat-icone');
+    
+    const nome = nomeInput.value.trim();
+    const icone = iconeInput.value.trim() || "🔹";
+    
+    if (!idPai || !nome) return alert("Por favor, selecione a categoria pai e digite o nome da subcategoria.");
+    
+    appDados.categoriasEstruturadas[idPai].subcategorias['sub_' + Date.now()] = { nome, icone };
+    
+    await salvarNoDB(); 
+    
+    // 1. LIMPA OS INPUTS
+    nomeInput.value = '';
+    iconeInput.value = '';
+    
+    // Atualiza o sistema
+    atualizarSelectSubcategorias();
+    atualizarTela();
+    
+    // 2. EXIBE O ALERTA
+    alert(`${icone} Subcategoria criada com sucesso!`);
+}
 
     async function excluirCategoriaPrincipal(id) {
         if (confirm("Excluir esta categoria principal?")) {
