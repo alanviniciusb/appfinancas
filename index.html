@@ -285,6 +285,7 @@
             <div style="border-bottom: 1px dashed var(--border); padding-bottom: 10px; margin-bottom: 10px;">
                 <label>Nova Categoria Principal</label>
                 <div class="row-group">
+                    <input type="text" id="cat-icone" placeholder="Ícone (Ex: 🏠, 🚗)" style="width: 35%;">
                     <input type="text" id="cat-nome" placeholder="Nome (Ex: Casa, Educação)">
                 </div>
                 <button class="btn-info" onclick="criarCategoriaPrincipal()">Criar Categoria</button>
@@ -722,26 +723,29 @@
 
     async function criarCategoriaPrincipal() {
     const nomeInput = document.getElementById('cat-nome');
-    const nome = nomeInput.value.trim();
-    if (!nome) return alert("Por favor, digite o nome da categoria.");
+    const iconeInput = document.getElementById('cat-icone');
     
-    // Define um ícone padrão de pasta para a categoria principal usar nos menus
-    const icone = "📁"; 
+    const nome = nomeInput.value.trim();
+    // Captura o ícone digitado ou define uma pasta 📁 como padrão caso fique vazio
+    const icone = iconeInput.value.trim() || "📁"; 
+    
+    if (!nome) return alert("Por favor, digite o nome da categoria.");
     
     appDados.categoriasEstruturadas['cat_' + Date.now()] = { nome, icone, subcategorias: {} };
     
     await salvarNoDB(); 
     
-    // 1. LIMPA O INPUT
+    // Limpa ambos os campos de texto após criar
     nomeInput.value = ''; 
+    iconeInput.value = ''; 
     
-    // Atualiza o sistema
+    // Atualiza todos os componentes visuais do sistema
     atualizarSelectsCategorias(); 
     atualizarFiltrosCategoriasBusca();
     atualizarTela();
     
-    // 2. EXIBE O ALERTA
-    alert("📁 Categoria principal criada com sucesso!");
+    // Alerta de sucesso com o ícone escolhido
+    alert(`${icone} Categoria principal "${nome}" criada com sucesso!`);
 }
 
 async function criarSubcategoria() {
