@@ -461,14 +461,44 @@
             sessionStorage.removeItem('backup_sucesso');
         }
         
-        // Registra o Service Worker para habilitar a instalação como PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker ativo com sucesso!', reg))
-                    .catch(err => console.log('Erro ao registrar Service Worker:', err));
-            });
+        // Registra o Service Worker com detecção automática de nova versão
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => {
+                console.log('Service Worker ativo com sucesso!', reg);
+                
+                // 1. Força o navegador a checar se há uma versão nova no servidor sempre que abre o app
+                reg.update();
+
+                // 2. Escuta se uma nova versão foi encontrada e terminou de baixar
+                reg.onupdatefound = () => {
+                    const instalandoWorker = reg.installing;
+                    if (instalandoWorker) {
+                        instalandoWorker.onstatechange = () => {
+                            if (instalandoWorker.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    // Se já existia uma versão antiga rodando, avisa o usuário e atualiza
+                                    alert("🔄 Uma nova versão do Finanças Pro foi instalada! O aplicativo será reiniciado para aplicar as atualizações.");
+                                    window.location.reload();
+                                }
+                            }
+                        };
+                    }
+                };
+            })
+            .catch(err => console.log('Erro ao registrar Service Worker:', err));
+    });
+
+    // 3. Garante o recarregamento se o novo Service Worker assumir o controle em segundo plano
+    let recarregando = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!recarregando) {
+            recarregando = true;
+            window.location.reload();
         }
+    });
+}
 
         inputRendaVal.addEventListener('input', () => { inputRendaVal.value = inputRendaVal.value.replace(/[^0-9+\-*/(),.]/g, ""); });
         inputGastoVal.addEventListener('input', () => { inputGastoVal.value = inputGastoVal.value.replace(/[^0-9+\-*/(),.]/g, ""); });
