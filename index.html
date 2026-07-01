@@ -285,7 +285,6 @@
             <div style="border-bottom: 1px dashed var(--border); padding-bottom: 10px; margin-bottom: 10px;">
                 <label>Nova Categoria Principal</label>
                 <div class="row-group">
-                    <input type="text" id="cat-icone" placeholder="Ícone (Ex: 🏠, 📚)" style="width: 35%;">
                     <input type="text" id="cat-nome" placeholder="Nome (Ex: Casa, Educação)">
                 </div>
                 <button class="btn-info" onclick="criarCategoriaPrincipal()">Criar Categoria</button>
@@ -663,7 +662,7 @@
         const bkpPai = selectGastoPai.value;
         selectPai.innerHTML = ''; selectGastoPai.innerHTML = '';
         for (const [id, cat] of Object.entries(appDados.categoriasEstruturadas)) {
-            const opt = document.createElement('option'); opt.value = id; opt.innerText = `${cat.icone} ${cat.nome}`;
+            const opt = document.createElement('option'); opt.value = id; opt.innerText = cat.nome;
             selectPai.appendChild(opt.cloneNode(true)); selectGastoPai.appendChild(opt);
         }
         if(bkpPai && appDados.categoriasEstruturadas[bkpPai]) selectGastoPai.value = bkpPai;
@@ -687,35 +686,42 @@
         const selectBusca = document.getElementById('busca-gasto-categoria');
         selectBusca.innerHTML = '<option value="">📁 Todas as Categorias</option>';
         for (const [id, cat] of Object.entries(appDados.categoriasEstruturadas)) {
-            const opt = document.createElement('option'); opt.value = id; opt.innerText = `${cat.icone} ${cat.nome}`;
+            const opt = document.createElement('option'); opt.value = id; opt.innerText = cat.nome;
             selectBusca.appendChild(opt);
         }
     }
 
     function listarCategoriasPaisGerenciamento() {
-        const lista = document.getElementById('mng-lista-pais'); lista.innerHTML = '';
-        for (const [id, cat] of Object.entries(appDados.categoriasEstruturadas)) {
-            const li = document.createElement('li'); li.className = 'mng-item';
-            li.innerHTML = `<span>${cat.icone} ${cat.nome}</span><button class="btn-del-cat" onclick="excluirCategoriaPrincipal('${id}')">✕</button>`;
-            lista.appendChild(li);
-        }
+    const lista = document.getElementById('mng-lista-pais'); lista.innerHTML = '';
+    for (const [id, cat] of Object.entries(appDados.categoriasEstruturadas)) {
+        const li = document.createElement('li'); li.className = 'mng-item';
+        li.innerHTML = `<span>${cat.icone || ""} ${cat.nome}</span>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn-del-cat" style="color: var(--info);" onclick="iniciarEdicaoCategoriaPrincipal('${id}')">✏️</button>
+                            <button class="btn-del-cat" onclick="excluirCategoriaPrincipal('${id}')">✕</button>
+                        </div>`;
+        lista.appendChild(li);
     }
+}
 
     function listarSubcategoriasGerenciamento() {
-        const lista = document.getElementById('mng-lista-subs'); lista.innerHTML = '';
-        const idPai = document.getElementById('select-cat-pai').value;
-        if (!idPai || !appDados.categoriasEstruturadas[idPai]) return;
-        const subs = appDados.categoriasEstruturadas[idPai].subcategorias;
-        for (const [idSub, sub] of Object.entries(subs)) {
-            const li = document.createElement('li'); li.className = 'mng-item';
-            li.innerHTML = `<span>${sub.icone} ${sub.nome}</span><button class="btn-del-cat" onclick="excluirSubcategoria('${idPai}', '${idSub}')">✕</button>`;
-            lista.appendChild(li);
-        }
+    const lista = document.getElementById('mng-lista-subs'); lista.innerHTML = '';
+    const idPai = document.getElementById('select-cat-pai').value;
+    if (!idPai || !appDados.categoriasEstruturadas[idPai]) return;
+    const subs = appDados.categoriasEstruturadas[idPai].subcategorias;
+    for (const [idSub, sub] of Object.entries(subs)) {
+        const li = document.createElement('li'); li.className = 'mng-item';
+        li.innerHTML = `<span>${sub.icone || ""} ${sub.nome}</span>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn-del-cat" style="color: var(--info);" onclick="iniciarEdicaoSubcategoria('${idPai}', '${idSub}')">✏️</button>
+                            <button class="btn-del-cat" onclick="excluirSubcategoria('${idPai}', '${idSub}')">✕</button>
+                        </div>`;
+        lista.appendChild(li);
     }
+}
 
     async function criarCategoriaPrincipal() {
         const nome = document.getElementById('cat-nome').value.trim();
-        const icone = document.getElementById('cat-icone').value.trim() || "📦";
         if (!nome) return;
         appDados.categoriasEstruturadas['cat_' + Date.now()] = { nome, icone, subcategorias: {} };
         await salvarNoDB(); atualizarSelectsCategorias(); atualizarFiltrosCategoriasBusca();
@@ -1048,7 +1054,7 @@
 
                 const textoExibir = i.desc || i.descricao || "Gasto sem descrição";
 
-                li.innerHTML = `<span>${catPaiInfo.icone || "📦"}${catSubInfo.icone || ""} <strong>${textoExibir}</strong> (${i.data.split('-')[2]}/${i.data.split('-')[1]}) ${ehFuturo ? '<span class="badge-futuro">Agendado</span>' : ''}</span>
+                li.innerHTML = `<span>${catSubInfo.icone || "🔹"} <strong>${textoExibir}</strong> (${i.data.split('-')[2]}/${i.data.split('-')[1]}) ${ehFuturo ? '<span class="badge-futuro">Agendado</span>' : ''}</span>
                                 <div class="actions-div"><span class="saldo-negativo">-${i.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</span>
                                 <button class="btn-action" style="color:var(--info)" onclick="iniciarEdicaoGasto(${i.id})">✏️</button>
                                 <button class="btn-action" onclick="excluirGasto(${i.id})">✕</button></div>`;
@@ -1060,6 +1066,56 @@
             renderizarGraficos();
         }
     }
+
+async function iniciarEdicaoCategoriaPrincipal(id) {
+    const cat = appDados.categoriasEstruturadas[id];
+    if (!cat) return;
+    
+    // Pergunta o novo nome
+    const novoNome = prompt("Editar Nome da Categoria Principal:", cat.nome);
+    if (novoNome === null) return; // Se o usuário cancelar, interrompe
+    if (!novoNome.trim()) return alert("O nome da categoria não pode ficar vazio.");
+    
+    // Pergunta o novo ícone (Se você seguiu a alteração anterior de remover ícones, pode deixar em branco)
+    const novoIcone = prompt("Editar Ícone da Categoria (Deixe vazio se não quiser usar):", cat.icone || "");
+    if (novoIcone === null) return;
+
+    // Aplica as alterações no objeto global
+    cat.nome = novoNome.trim();
+    cat.icone = novoIcone.trim();
+    
+    // Salva no banco de dados e atualiza todas as telas e seletores do sistema
+    await salvarNoDB();
+    atualizarSelectsCategorias();
+    atualizarFiltrosCategoriasBusca();
+    atualizarTela();
+    alert("📁 Categoria principal atualizada com sucesso!");
+}
+
+async function iniciarEdicaoSubcategoria(idPai, idSub) {
+    const catPai = appDados.categoriasEstruturadas[idPai];
+    if (!catPai || !catPai.subcategorias[idSub]) return;
+    const sub = catPai.subcategorias[idSub];
+    
+    // Pergunta o novo nome da subcategoria
+    const novoNome = prompt("Editar Nome da Subcategoria:", sub.nome);
+    if (novoNome === null) return;
+    if (!novoNome.trim()) return alert("O nome da subcategoria não pode ficar vazio.");
+    
+    // Pergunta o novo ícone da subcategoria
+    const novoIcone = prompt("Editar Ícone da Subcategoria:", sub.icone || "");
+    if (novoIcone === null) return;
+
+    // Aplica as alterações
+    sub.nome = novoNome.trim();
+    sub.icone = novoIcone.trim();
+    
+    // Salva e atualiza
+    await salvarNoDB();
+    atualizarSelectSubcategorias();
+    atualizarTela();
+    alert("🔹 Subcategoria atualizada com sucesso!");
+}                
 </script>
 </body>
 </html>
