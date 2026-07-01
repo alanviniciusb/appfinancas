@@ -166,7 +166,15 @@
         </div>
         <div class="balance-box" style="font-size: 1.4rem; margin-top: 5px;">
             <span>Saldo Geral Acumulado:</span>
-            <span id="txt-saldo-acumulado" style="font-weight: 800;">R$ 0,00</span>
+           <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+        
+        <p id="seu-id-do-saldo" style="margin: 0;">R$ 0,00</p> 
+        
+        <button id="btn-janela-saldo" onclick="alternarVisibilidadeSaldo()" style="background: none; border: none; cursor: pointer; font-size: 22px; padding: 0; line-height: 1;">
+            🙈
+        </button>
+        
+    </div>
         </div>
         <p style="font-size:0.8rem; color:#7f8c8d; margin: 5px 0 0 0; text-align: right;">(Desconsidera valores futuros agendados)</p>
     </div>
@@ -348,6 +356,16 @@
 
 <script>
     let saldoOculto = true;
+    function alternarVisibilidadeSaldo() {
+        saldoOculto = !saldoOculto; 
+        
+        const btn = document.getElementById('btn-janela-saldo');
+        if (btn) {
+            btn.innerText = saldoOculto ? "🙈" : "👁️"; 
+        }
+        
+        atualizarTela(); 
+    }
     let appDados = { 
         senha: '', tema: 'light', entradas: [], gastos: [], 
         categoriasEstruturadas: {}, graficoVisivel: true, tipoGrafico: 'pizza'
