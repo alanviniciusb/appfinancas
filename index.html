@@ -854,68 +854,66 @@ async function criarSubcategoria() {
     }
 
     // --- LOGICA DE LANÇAMENTOS E AUTOMAÇÃO DE RECORRÊNCIA ---
-    async function adicionarEntrada() {
-        const inputOrigem = document.getElementById('renda-origem'); const inputValor = document.getElementById('renda-valor');
-        const origem = inputOrigem.value.trim() || 'Outros'; const valor = converterMoedaParaFloat(inputValor.value);
-        const data = document.getElementById('renda-data').value || obterDataHoje();
-        if (valor <= 0) return alert('Valor inválido.');
+    sync function adicionarEntrada() {
+    const inputOrigem = document.getElementById('renda-origem'); 
+    const inputValor = document.getElementById('renda-valor');
+    const inputData = document.getElementById('renda-data'); // Referência à data
+    
+    const origem = inputOrigem.value.trim() || 'Outros'; 
+    const valor = converterMoedaParaFloat(inputValor.value);
+    const data = inputData.value || obterDataHoje();
+    
+    if (valor <= 0) return alert('Valor inválido.');
 
-        if (idEdicaoEntrada !== null) {
-            const idx = appDados.entradas.findIndex(i => i.id === idEdicaoEntrada);
-            if(idx !== -1) appDados.entradas[idx] = { id: idEdicaoEntrada, origem, valor, data };
-            cancelarEdicaoEntrada();
-        } else { appDados.entradas.push({ id: Date.now(), origem, valor, data }); }
-
-        await salvarNoDB(); inputOrigem.value = ''; inputValor.value = ''; atualizarTela();
-        alert("💰 Entrada registrada com sucesso!"); 
+    if (idEdicaoEntrada !== null) {
+        const idx = appDados.entradas.findIndex(i => i.id === idEdicaoEntrada);
+        if(idx !== -1) appDados.entradas[idx] = { id: idEdicaoEntrada, origem, valor, data };
+        cancelarEdicaoEntrada();
+    } else { 
+        appDados.entradas.push({ id: Date.now(), origem, valor, data }); 
     }
 
+    await salvarNoDB(); 
+    
+    // RESET DOS CAMPOS
+    inputOrigem.value = ''; 
+    inputValor.value = ''; 
+    inputData.value = obterDataHoje(); // <-- Isso garante o retorno à data atual
+    
+    atualizarTela();
+    alert("💰 Entrada registrada com sucesso!"); 
+}
     async function adicionarGasto() {
-        const inputDesc = document.getElementById('gasto-nome'); const inputValor = document.getElementById('gasto-valor');
-        const idPai = document.getElementById('gasto-cat-principal').value; const idSub = document.getElementById('gasto-subcategoria').value;
-        const valorTotalCalculado = converterMoedaParaFloat(inputValor.value); const dataOriginal = document.getElementById('gasto-data').value || obterDataHoje();
-        const tipoRecorrencia = document.getElementById('gasto-recorrencia').value;
-        
-        if (!idPai || valorTotalCalculado <= 0) return alert('Campos inválidos.');
-        const nomeSub = (appDados.categoriasEstruturadas[idPai] && appDados.categoriasEstruturadas[idPai].subcategorias[idSub]) ? appDados.categoriasEstruturadas[idPai].subcategorias[idSub].nome : 'Geral';
-        const descBase = inputDesc.value.trim() || nomeSub;
+    const inputDesc = document.getElementById('gasto-nome'); 
+    const inputValor = document.getElementById('gasto-valor');
+    const selectPai = document.getElementById('gasto-cat-principal');
+    const selectSub = document.getElementById('gasto-subcategoria');
+    const inputData = document.getElementById('gasto-data');
+    const inputRecorrencia = document.getElementById('gasto-recorrencia');
+    
+    const idPai = selectPai.value; 
+    const idSub = selectSub.value;
+    const valorTotalCalculado = converterMoedaParaFloat(inputValor.value); 
+    const dataOriginal = inputData.value || obterDataHoje();
+    const tipoRecorrencia = inputRecorrencia.value;
+    
+    if (!idPai || valorTotalCalculado <= 0) return alert('Campos inválidos.');
+    
+    // ... [MANTENHA A LÓGICA DE SALVAMENTO E RECORRÊNCIA QUE JÁ EXISTE NO SEU CÓDIGO] ...
 
-        if (idEdicaoGasto !== null) {
-            const idx = appDados.gastos.findIndex(i => i.id === idEdicaoGasto);
-            if(idx !== -1) appDados.gastos[idx] = { id: idEdicaoGasto, desc: descBase, valor: valorTotalCalculado, data: dataOriginal, catPai: idPai, catSub: idSub };
-            cancelarEdicaoGasto();
-        } else {
-            let dataSplit = dataOriginal.split('-');
-            let ano = parseInt(dataSplit[0]);
-            let mes = parseInt(dataSplit[1]) - 1; 
-            let dia = parseInt(dataSplit[2]);
-
-            if (tipoRecorrencia === 'unico') {
-                appDados.gastos.push({ id: Date.now(), desc: descBase, valor: valorTotalCalculado, data: dataOriginal, catPai: idPai, catSub: idSub });
-            } else if (tipoRecorrencia === 'fixo') {
-                for (let i = 0; i < 12; i++) {
-                    let novaData = new Date(ano, mes + i, dia);
-                    let dataFormatada = `${novaData.getFullYear()}-${String(novaData.getMonth() + 1).padStart(2, '0')}-${String(novaData.getDate()).padStart(2, '0')}`;
-                    appDados.gastos.push({ id: Date.now() + i, desc: `${descBase} (Fixo)`, valor: valorTotalCalculado, data: dataFormatada, catPai: idPai, catSub: idSub });
-                }
-            } else {
-                let numParcelas = parseInt(tipoRecorrencia);
-                let valorParcela = valorTotalCalculado / numParcelas;
-                for (let i = 0; i < numParcelas; i++) {
-                    let novaData = new Date(ano, mes + i, dia);
-                    let dataFormatada = `${novaData.getFullYear()}-${String(novaData.getMonth() + 1).padStart(2, '0')}-${String(novaData.getDate()).padStart(2, '0')}`;
-                    appDados.gastos.push({ id: Date.now() + i, desc: `${descBase} (${i+1}/${numParcelas})`, valor: valorParcela, data: dataFormatada, catPai: idPai, catSub: idSub });
-                }
-            }
-        }
-
-        await salvarNoDB();
-        inputDesc.value = ''; inputValor.value = ''; 
-        document.getElementById('gasto-recorrencia').value = 'unico';
-        atualizarTela();
-        alert("💸 Gasto registrado com sucesso!");
-    }
-
+    await salvarNoDB();
+    
+    // RESET DOS CAMPOS E SELECTS
+    inputDesc.value = ''; 
+    inputValor.value = ''; 
+    inputData.value = obterDataHoje();
+    inputRecorrencia.value = 'unico';
+    selectPai.value = ''; // Reseta a categoria principal
+    selectSub.innerHTML = ''; // Limpa as opções de subcategoria
+    
+    atualizarTela();
+    alert("💸 Gasto registrado com sucesso!");
+}
     function iniciarEdicaoEntrada(id) {
         const item = appDados.entradas.find(i => i.id === id); if (!item) return;
         idEdicaoEntrada = id; document.getElementById('card-entrada').classList.add('editando-card');
