@@ -406,6 +406,15 @@
         if(!num || isNaN(num)) return "";
         return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
+    function formatarMoeda(valor) {
+    // Se o valor for um elemento HTML (como no seu caso com txt-saldo-acumulado), 
+    // converte o texto para float antes de formatar
+    let valorNumerico = typeof valor === 'object' ? 
+        parseFloat(valor.innerText.replace(/[^0-9,-]+/g, "").replace(",", ".")) : valor;
+        
+    if (isNaN(valorNumerico)) valorNumerico = 0;
+    return valorNumerico.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
 
     // --- BANCO DE DADOS INDEXEDDB ---
     function iniciarIndexedDB() {
