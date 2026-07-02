@@ -63,14 +63,10 @@
         listaEntradas.innerHTML = '';
         entradaFiltradasPeriodo.forEach(i => {
             const futuro = ehFuturo(i.data);
-            const li = document.createElement('li'); li.className = 'history-item' + (futuro ? ' item-futuro-linha' : '');
+            const li = document.createElement('li');
+            li.className = 'history-item' + (futuro ? ' item-futuro-linha' : '');
             const dataBR = formatarDataBrasileira(i.data);
-            li.innerHTML = `<div style="flex-grow:1;"><span>${i.origem}${futuro ? '<span class="badge-futuro">Futuro</span>' : ''}</span><br><small style="color:#7f8c8d;">${dataBR}</small></div>
-                <span class="saldo-positivo" style="margin-right:10px;">${formatarFloatParaMoedaInput(i.valor)}</span>
-                <div class="actions-div">
-                    <button class="btn-action" onclick="iniciarEdicaoEntrada(${i.id})" title="Editar">✏️</button>
-                    <button class="btn-delete" onclick="excluirEntrada(${i.id})" title="Excluir">✕</button>
-                </div>`;
+            li.innerHTML = `<div style="flex-grow:1;"><span>${i.origem}${futuro ? '<span class="badge-futuro">Futuro</span>' : ''}</span><br><small style="color:#7f8c8d;">${dataBR}</small></div><span class="saldo-positivo" style="margin-right:10px;">${formatarFloatParaMoedaInput(i.valor)}</span><div class="actions-div"><button class="btn-action" onclick="iniciarEdicaoEntrada(${i.id})" title="Editar">✏️</button><button class="btn-delete" onclick="excluirEntrada(${i.id})" title="Excluir">✕</button></div>`;
             listaEntradas.appendChild(li);
         });
         document.getElementById('lbl-contador-entradas').innerText = `Exibindo ${entradaFiltradasPeriodo.length} registros`;
@@ -91,13 +87,9 @@
             const futuro = ehFuturo(i.data);
             const catInfo = appDados.categoriasEstruturadas[i.catPai] || { icone: '📁', nome: 'Outros' };
             const dataBR = formatarDataBrasileira(i.data);
-            const li = document.createElement('li'); li.className = 'history-item' + (futuro ? ' item-futuro-linha' : '');
-            li.innerHTML = `<div style="flex-grow:1;"><span>${catInfo.icone} ${i.desc}${futuro ? '<span class="badge-futuro">Futuro</span>' : ''}</span><br><small style="color:#7f8c8d;">${dataBR}</small></div>
-                <span class="saldo-negativo" style="margin-right:10px;">${formatarFloatParaMoedaInput(i.valor)}</span>
-                <div class="actions-div">
-                    <button class="btn-action" onclick="iniciarEdicaoGasto(${i.id})" title="Editar">✏️</button>
-                    <button class="btn-delete" onclick="excluirGasto(${i.id})" title="Excluir">✕</button>
-                </div>`;
+            const li = document.createElement('li');
+            li.className = 'history-item' + (futuro ? ' item-futuro-linha' : '');
+            li.innerHTML = `<div style="flex-grow:1;"><span>${catInfo.icone} ${i.desc}${futuro ? '<span class="badge-futuro">Futuro</span>' : ''}</span><br><small style="color:#7f8c8d;">${dataBR}</small></div><span class="saldo-negativo" style="margin-right:10px;">${formatarFloatParaMoedaInput(i.valor)}</span><div class="actions-div"><button class="btn-action" onclick="iniciarEdicaoGasto(${i.id})" title="Editar">✏️</button><button class="btn-delete" onclick="excluirGasto(${i.id})" title="Excluir">✕</button></div>`;
             listaGastos.appendChild(li);
         });
         document.getElementById('lbl-contador-gastos').innerText = `Exibindo ${gastosFiltradosPeriodo.length} registros`;
