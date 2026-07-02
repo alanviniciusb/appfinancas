@@ -1088,7 +1088,7 @@ async function criarSubcategoria() {
             elementoSaldo.innerText = "R$ •••••"; 
         } else {
             // Se estiver visível, mostra o valor formatado normal do seu app
-            elementoSaldo.innerText = elementoSaldo; 
+            elementoSaldo.innerText = formatarMoeda(elementoSaldo); 
         }
     }
         let pctConsumo = 0;
