@@ -63,7 +63,6 @@
 
         .actions-div { display: flex; align-items: center; gap: 8px; }
         .btn-action { background: none; border: none; cursor: pointer; font-size: 1rem; }
-        .btn-delete { color: var(--danger); background: none; border: none; cursor: pointer; font-size: 1.2rem; font-weight: bold; width: auto; padding: 0; }
         .clear-btn { background: none; border: 1px solid var(--input-border); color: #7f8c8d; margin-top: 15px; font-size: 0.85rem; padding: 8px; }
 
         .mng-list { margin-top: 10px; padding: 0; list-style: none; font-size: 0.9rem; max-height: 150px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 5px; }
@@ -78,16 +77,16 @@
         .bar-label-div { display: flex; justify-content: space-between; margin-bottom: 3px; }
         .bar-background { background: #eee; width: 100%; height: 16px; border-radius: 8px; overflow: hidden; }
         [data-theme="dark"] .bar-background { background: #444; }
-        .bar-fill { height: 100%; border-radius: 8px; width: 0%; transition: width 0.5s, background 0.3s; }
+        .bar-fill { height: 100%; background: var(--info); border-radius: 8px; width: 0%; transition: width 0.5s; }
 
         .chart-legend { font-size: 0.85rem; margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .color-box { width: 12px; height: 12px; border-radius: 3px; }
 
-        .theme-toggle { position: fixed; bottom: 15px; right: 15px; background: #34495e; color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 999; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .theme-toggle { position: fixed; bottom: 15px; right: 15px; background: #34495e; color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 999; }
         .comparativo-box { font-size: 0.85rem; color: #7f8c8d; margin-top: 4px; text-align: right; }
 
-        #tela-bloqueio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #2c3e50; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
+        #tela-bloqueio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #2c3e50; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; color: white; }
         .lock-container { width: 80%; max-width: 300px; text-align: center; }
         .lock-input { text-align: center; font-size: 2rem; letter-spacing: 10px; margin-bottom: 15px; color: #2c3e50; background: white; }
         .btn-cancelar-lock { background: transparent; border: 1px solid #ffffff44; color: #bdc3c7; margin-top: 10px; font-size: 0.9rem; padding: 10px; display: none; }
@@ -156,7 +155,7 @@
                 <span id="txt-pct-consumo">0%</span>
             </div>
             <div class="bar-background">
-                <div id="bar-pct-consumo" class="bar-fill"></div>
+                <div id="bar-pct-consumo" class="bar-fill" style="background: var(--danger); width: 0%;"></div>
             </div>
         </div>
     </div>
@@ -221,7 +220,7 @@
         </div>
         <div class="form-group">
             <label>Categoria Principal</label>
-            <select id="gasto-cat-principal" onchange="atualizarSelectSubcategorias()"></select>
+            <select id="gasto-cat-principal" onchange="atualizarSelectsCategorias()"></select>
         </div>
         <div class="form-group">
             <label>Subcategoria</label>
@@ -357,8 +356,10 @@
 </div>
 
 <script>
+    // 1. A variável que você acabou de criar
     let saldoOculto = true; 
 
+    // 2. A função que faz o clique do olho funcionar
     function alternarVisibilidadeSaldo() {
         saldoOculto = !saldoOculto; 
         
@@ -367,28 +368,8 @@
             btn.innerText = saldoOculto ? "🙈" : "👁️"; 
         }
         
-        atualizarSaldoAcumulado();
+        atualizarTela(); 
     }
-
-    function formatarDataBrasileira(dataISO) {
-        if (!dataISO) return '';
-        const [ano, mes, dia] = dataISO.split('-');
-        return `${dia}/${mes}`;
-    }
-
-    function ehFuturo(dataISO) {
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-        const data = new Date(dataISO + 'T00:00:00');
-        return data > hoje;
-    }
-
-    function calcularCorPorcentagem(pct) {
-        if (pct < 70) return '#2ecc71'; // Verde
-        if (pct < 90) return '#f1c40f'; // Amarelo
-        return '#e74c3c'; // Vermelho
-    }
-
     let appDados = { 
         senha: '', tema: 'light', entradas: [], gastos: [], 
         categoriasEstruturadas: {}, graficoVisivel: true, tipoGrafico: 'pizza'
@@ -608,9 +589,7 @@ if ('serviceWorker' in navigator) {
     async function processarVerificacaoSenha() {
         const input = document.getElementById('input-senha').value;
         if (input.length < 4) return alert('A senha requer 4 dígitos.');
-    function atualizarSaldoAcumulado() {
-        let saldoTotal = 0;
-
+        
         if (modoSegurancaAtual === 'login') {
             if (!appDados.senha) {
                 appDados.senha = input;
@@ -652,7 +631,7 @@ if ('serviceWorker' in navigator) {
         secao.style.display = secao.style.display === 'block' ? 'none' : 'block';
     }
 
-    async function executarAlteracaoSenha() {
+    async function ejecutarAlteracaoSenha() {
         const atual = document.getElementById('pwd-atual').value;
         const nova = document.getElementById('pwd-nova').value;
         const confirma = document.getElementById('pwd-confirma').value;
@@ -683,12 +662,10 @@ if ('serviceWorker' in navigator) {
 
         let csvContent = "Data;Tipo;Descrição/Origem;Categoria;Subcategoria;Valor\n";
 
-        // Entradas: considera apenas as NÃO futuras
         (appDados.entradas || []).forEach(i => {
             const dataInvertida = i.data ? i.data.split('-').reverse().join('/') : '';
             const valorPtBr = i.valor ? i.valor.toFixed(2).replace('.', ',') : '0,00';
             csvContent += `${dataInvertida};Entrada;${i.origem || 'Entrada'};Receita;;R$ ${valorPtBr}\n`;
-            if (!ehFuturo(i.data)) saldoTotal += i.valor;
         });
 
         (appDados.gastos || []).forEach(i => {
@@ -802,6 +779,7 @@ if ('serviceWorker' in navigator) {
     const iconeInput = document.getElementById('cat-icone');
     
     const nome = nomeInput.value.trim();
+    // Captura o ícone digitado ou define uma pasta 📁 como padrão caso fique vazio
     const icone = iconeInput.value.trim() || "📁"; 
     
     if (!nome) return alert("Por favor, digite o nome da categoria.");
@@ -810,13 +788,16 @@ if ('serviceWorker' in navigator) {
     
     await salvarNoDB(); 
     
+    // Limpa ambos os campos de texto após criar
     nomeInput.value = ''; 
     iconeInput.value = ''; 
     
+    // Atualiza todos os componentes visuais do sistema
     atualizarSelectsCategorias(); 
     atualizarFiltrosCategoriasBusca();
     atualizarTela();
     
+    // Alerta de sucesso com o ícone escolhido
     alert(`${icone} Categoria principal "${nome}" criada com sucesso!`);
 }
 
@@ -834,12 +815,15 @@ async function criarSubcategoria() {
     
     await salvarNoDB(); 
     
+    // 1. LIMPA OS INPUTS
     nomeInput.value = '';
     iconeInput.value = '';
     
+    // Atualiza o sistema
     atualizarSelectSubcategorias();
     atualizarTela();
     
+    // 2. EXIBE O ALERTA
     alert(`${icone} Subcategoria criada com sucesso!`);
 }
 
@@ -881,7 +865,7 @@ async function criarSubcategoria() {
         const tipoRecorrencia = document.getElementById('gasto-recorrencia').value;
         
         if (!idPai || valorTotalCalculado <= 0) return alert('Campos inválidos.');
-        const nomeSub = (appDados.categoriasEstruturadas[idPai] && appDados.categoriasEstruturadas[idPai].subcategorias[idSub]) ? appDados.categoriasEstruturadas[idPai].subcategorias[idSub].nome : '';
+        const nomeSub = (appDados.categoriasEstruturadas[idPai] && appDados.categoriasEstruturadas[idPai].subcategorias[idSub]) ? appDados.categoriasEstruturadas[idPai].subcategorias[idSub].nome : 'Geral';
         const descBase = inputDesc.value.trim() || nomeSub;
 
         if (idEdicaoGasto !== null) {
@@ -1014,95 +998,238 @@ async function criarSubcategoria() {
         if (!appDados.graficoVisivel) { container.style.display = 'none'; return; }
         container.style.display = 'flex';
         const filtroAtual = document.getElementById('filtro-mes-ano').value;
+        const hojeStr = obterDataHoje();
 
-        let rendaTotalPeriodo = 0, gastototalPeriodo = 0;
-        const [anoFiltro, mesFiltro] = filtroAtual.split('-').map(Number);
+        const gastosMesEfetivos = (appDados.gastos || []).filter(i => i.data && i.data.startsWith(filtroAtual) && i.data <= hojeStr);
+        const totalGasto = gastosMesEfetivos.reduce((s, i) => s + i.valor, 0);
 
-        appDados.entradas.forEach(i => {
-            const [ano, mes] = i.data.split('-').map(Number);
-            if (ano === anoFiltro && mes === mesFiltro && !ehFuturo(i.data)) rendaTotalPeriodo += i.valor;
-        });
+        if (totalGasto === 0) {
+            elPizza.style.display = 'none'; elBarras.style.display = 'none';
+            elLegenda.innerText = "Nenhum débito efetivo no período selecionado."; return;
+        }
 
-        const datasGastos = {};
-        appDados.gastos.forEach(i => {
-            const [ano, mes] = i.data.split('-').map(Number);
-            if (ano === anoFiltro && mes === mesFiltro && !ehFuturo(i.data)) {
-                gastototalPeriodo += i.valor;
-                const chave = appDados.categoriasEstruturadas[i.catPai]?.nome || 'Outros';
-                datasGastos[chave] = (datasGastos[chave] || 0) + i.valor;
-            }
-        // Gastos: considera apenas os NÃO futuros
-        (appDados.gastos || []).forEach(i => {
-            if (!ehFuturo(i.data)) saldoTotal -= i.valor;
+        const dadosAgrupados = {};
+        gastosMesEfetivos.forEach(g => {
+            const catInfo = appDados.categoriasEstruturadas[g.catPai] || { nome: "Outros", icone: "📦" };
+            dadosAgrupados[catInfo.nome] = (dadosAgrupados[catInfo.nome] || 0) + g.valor;
         });
 
         if (appDados.tipoGrafico === 'pizza') {
-            let gradiente = 'conic-gradient(';
-            let porcentagem = 0;
-            for (const [cat, valor] of Object.entries(datasGastos)) {
-                const pct = (valor / (gastototalPeriodo || 1)) * 100;
-                const cor = CORES[Object.keys(datasGastos).indexOf(cat) % CORES.length];
-                gradiente += `${cor} ${porcentagem}% ${porcentagem + pct}%, `;
-                porcentagem += pct;
+            elPizza.style.display = 'block'; elBarras.style.display = 'none';
+            let acumulado = 0; const partesGradient = []; let corIdx = 0;
+            for (const [nome, valor] of Object.entries(dadosAgrupados)) {
+                const pct = (valor / totalGasto) * 100; const cor = CORES[corIdx % CORES.length]; corIdx++;
+                partesGradient.push(`${cor} ${acumulado}% ${(acumulado + pct).toFixed(1)}%`); acumulado += pct;
+                const itemLeg = document.createElement('div'); itemLeg.className = 'legend-item';
+                itemLeg.innerHTML = `<div class="color-box" style="background:${cor}"></div> <span>${nome}: ${pct.toFixed(0)}%</span>`;
+                elLegenda.appendChild(itemLeg);
             }
-            gradiente += '#ccc ' + porcentagem + '%)';
-            elPizza.style.background = gradiente;
-            elPizza.style.display = 'block';
-            elBarras.style.display = 'none';
+            elPizza.style.background = `conic-gradient(${partesGradient.join(', ')})`;
         } else {
-            elPizza.style.display = 'none';
-            elBarras.style.display = 'flex';
-            for (const [cat, valor] of Object.entries(datasGastos)) {
-                const pct = (valor / (gastototalPeriodo || 1)) * 100;
-                const cor = CORES[Object.keys(datasGastos).indexOf(cat) % CORES.length];
-                const row = document.createElement('div'); row.className = 'bar-row';
-                row.innerHTML = `<div class="bar-label-div"><span>${cat}</span><span>${valor.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</span></div>
-                    <div class="bar-background"><div class="bar-fill" style="background: ${cor}; width: ${pct}%;"></div></div>`;
-                elBarras.appendChild(row);
+            elPizza.style.display = 'none'; elBarras.style.display = 'flex';
+            let corIdx = 0;
+            for (const [nome, valor] of Object.entries(dadosAgrupados)) {
+                const pct = (valor / totalGasto) * 100; const cor = CORES[corIdx % CORES.length]; corIdx++;
+                const barRow = document.createElement('div'); barRow.className = 'bar-row';
+                barRow.innerHTML = `
+                    <div class="bar-label-div"><span><strong>${nome}</strong></span><span>${valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})} (${pct.toFixed(0)}%)</span></div>
+                    <div class="bar-background"><div class="bar-fill" style="width: ${pct}%; background: ${cor}"></div></div>`;
+                elBarras.appendChild(barRow);
+            }
+        }
+    }
+
+    function atualizarTela() {
+        const elFiltro = document.getElementById('filtro-mes-ano');
+        const filtroAtual = elFiltro ? elFiltro.value : obterDataHoje().substring(0, 7);
+        const hojeStr = obterDataHoje();
+
+        const elBuscaEntrada = document.getElementById('busca-entrada-texto');
+        const buscaEntradaTxt = elBuscaEntrada ? elBuscaEntrada.value.toLowerCase().trim() : '';
+        
+        const elBuscaGasto = document.getElementById('busca-gasto-texto');
+        const buscaGastoTxt = elBuscaGasto ? elBuscaGasto.value.toLowerCase().trim() : '';
+        
+        const elBuscaGastoCat = document.getElementById('busca-gasto-categoria');
+        const buscaGastoCat = elBuscaGastoCat ? elBuscaGastoCat.value : '';
+
+        const entradasMes = (appDados.entradas || []).filter(i => i.data && i.data.startsWith(filtroAtual));
+        const gastosMes = (appDados.gastos || []).filter(i => i.data && i.data.startsWith(filtroAtual));
+
+        const totalRecebidoEfetivo = entradasMes.filter(i => i.data <= hojeStr).reduce((s, i) => s + i.valor, 0);
+        const totalGastoEfetivo = gastosMes.filter(i => i.data <= hojeStr).reduce((s, i) => s + i.valor, 0);
+        const saldoMesEfetivo = totalRecebidoEfetivo - totalGastoEfetivo;
+
+        if (document.getElementById('txt-recebido')) document.getElementById('txt-recebido').innerText = totalRecebidoEfetivo.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+        if (document.getElementById('txt-gasto')) document.getElementById('txt-gasto').innerText = totalGastoEfetivo.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+        
+        const elSaldo = document.getElementById('txt-saldo');
+        if (elSaldo) {
+            elSaldo.innerText = saldoMesEfetivo.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+            elSaldo.className = saldoMesEfetivo >= 0 ? 'saldo-positivo' : 'saldo-negativo';
+        }
+
+        const globalEntradasEfetivas = (appDados.entradas || []).filter(i => i.data && i.data <= hojeStr).reduce((sum, item) => sum + item.valor, 0);
+        const globalGastosEfetivos = (appDados.gastos || []).filter(i => i.data && i.data <= hojeStr).reduce((sum, item) => sum + item.valor, 0);
+        const saldoAcumuladoGlobal = globalEntradasEfetivas - globalGastosEfetivos;
+
+        const elSaldoAcumulado = document.getElementById('txt-saldo-acumulado');
+        if (elSaldoAcumulado) {
+            elSaldoAcumulado.innerText = saldoAcumuladoGlobal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+            elSaldoAcumulado.className = saldoAcumuladoGlobal >= 0 ? 'saldo-positivo' : 'saldo-negativo';
+        }
+        const elementoSaldo = document.getElementById('txt-saldo-acumulado'); 
+        if (elementoSaldo) {
+            if (saldoOculto) {
+            // Se o usuário quis esconder, mostra as bolinhas
+            elementoSaldo.innerText = "R$ •••••"; 
+        } else {
+            // Se estiver visível, mostra o valor formatado normal do seu app
+            elementoSaldo.innerText = formatarMoeda(elementoSaldo); 
+        }
+    }
+        let pctConsumo = 0;
+        if (totalRecebidoEfetivo > 0) pctConsumo = Math.round((totalGastoEfetivo / totalRecebidoEfetivo) * 100);
+        else if (totalGastoEfetivo > 0) pctConsumo = 100;
+        
+        if (document.getElementById('txt-pct-consumo')) document.getElementById('txt-pct-consumo').innerText = `${pctConsumo}%`;
+
+        const barraConsumo = document.getElementById('bar-pct-consumo');
+        if (barraConsumo) {
+    // 1. Atualiza a largura da barra
+           barraConsumo.style.width = `${Math.min(pctConsumo, 100)}%`;
+    
+    // 2. Altera a cor dinamicamente baseada na porcentagem gasta
+          if (pctConsumo < 70) {
+              barraConsumo.style.backgroundColor = "var(--primary)"; // Verde (Seguro)
+        } else if (pctConsumo >= 70 && pctConsumo < 90) {
+              barraConsumo.style.backgroundColor = "var(--warning)"; // Amarelo (Atenção)
+        } else {
+              barraConsumo.style.backgroundColor = "var(--danger)";  // Vermelho (Crítico)
+    }
+}
+
+        const partes = filtroAtual.split('-');
+        const dataAnterior = new Date(parseInt(partes[0]), parseInt(partes[1]) - 2, 1);
+        const filtroAnterior = `${dataAnterior.getFullYear()}-${String(dataAnterior.getMonth() + 1).padStart(2, '0')}`;
+        const totalGastoAnteriorEfetivo = (appDados.gastos || []).filter(i => i.data && i.data.startsWith(filtroAnterior) && i.data <= hojeStr).reduce((s, i) => s + i.valor, 0);
+
+        const elComp = document.getElementById('txt-comparativo');
+        if (elComp) {
+            if (totalGastoAnteriorEfetivo === 0) { elComp.innerText = "vs. mês anterior: dados insuficientes"; } 
+            else {
+                const variacao = ((totalGastoEfetivo - totalGastoAnteriorEfetivo) / totalGastoAnteriorEfetivo) * 100;
+                elComp.innerText = variacao > 0 ? `▲ Aumentou ${variacao.toFixed(1)}% vs. mês passado` : `▼ Diminuiu ${Math.abs(variacao).toFixed(1)}% vs. mês passado`;
+                elComp.style.color = variacao > 0 ? "var(--danger)" : "var(--primary)";
             }
         }
 
-        elLegenda.innerHTML = '';
-        let idx = 0;
-        for (const [cat, valor] of Object.entries(datasGastos)) {
-            const cor = CORES[idx++ % CORES.length];
-            const item = document.createElement('div'); item.className = 'legend-item';
-            item.innerHTML = `<div class="color-box" style="background: ${cor};"></div><span>${cat}</span>`;
-            elLegenda.appendChild(item);
+        const lEntradas = document.getElementById('lista-entradas');
+        if (lEntradas) {
+            lEntradas.innerHTML = '';
+            const entradasFiltradas = entradasMes.filter(i => (i.origem || "").toLowerCase().includes(buscaEntradaTxt));
+            if (document.getElementById('lbl-contador-entradas')) {
+                document.getElementById('lbl-contador-entradas').innerText = `Exibindo ${entradasFiltradas.length} de ${entradasMes.length} registros`;
+            }
+            
+            entradasFiltradas.reverse().forEach(i => {
+                const li = document.createElement('li'); const ehFuturo = i.data > hojeStr;
+                li.className = `history-item ${ehFuturo ? 'item-futuro-linha' : ''}`;
+                li.innerHTML = `<span>💰 <strong>${i.origem || 'Entrada'}</strong> (${i.data.split('-')[2]}/${i.data.split('-')[1]}) ${ehFuturo ? '<span class="badge-futuro">Agendado</span>' : ''}</span>
+                                <div class="actions-div"><span class="saldo-positivo">+${i.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</span>
+                                <button class="btn-action" style="color:var(--info)" onclick="iniciarEdicaoEntrada(${i.id})">✏️</button>
+                                <button class="btn-action" onclick="excluirEntrada(${i.id})">✕</button></div>`;
+                lEntradas.appendChild(li);
+            });
+        }
+
+        const lGastos = document.getElementById('lista-gastos');
+        if (lGastos) {
+            lGastos.innerHTML = '';
+            const gastosFiltrados = gastosMes.filter(i => {
+                const textoGasto = (i.desc || i.descricao || "").toLowerCase();
+                const matchTexto = textoGasto.includes(buscaGastoTxt);
+                const matchCategoria = buscaGastoCat === "" || i.catPai === buscaGastoCat;
+                return matchTexto && matchCategoria;
+            });
+            
+            if (document.getElementById('lbl-contador-gastos')) {
+                document.getElementById('lbl-contador-gastos').innerText = `Exibindo ${gastosFiltrados.length} de ${gastosMes.length} registros`;
+            }
+
+            gastosFiltrados.reverse().forEach(i => {
+                const categorias = appDados.categoriasEstruturadas || {};
+                const catPaiInfo = categorias[i.catPai] || { icone: "📦", nome: "Outros" };
+                const catSubInfo = (catPaiInfo.subcategorias && i.catSub) ? (catPaiInfo.subcategorias[i.catSub] || { icone: "🔹", nome: "" }) : { icone: "🔹", nome: "" };
+                
+                const ehFuturo = i.data > hojeStr;
+                const li = document.createElement('li'); 
+                li.className = `history-item ${ehFuturo ? 'item-futuro-linha' : ''}`;
+
+                const textoExibir = i.desc || i.descricao || "Gasto sem descrição";
+
+                li.innerHTML = `<span>${catSubInfo.icone || "🔹"} <strong>${textoExibir}</strong> (${i.data.split('-')[2]}/${i.data.split('-')[1]}) ${ehFuturo ? '<span class="badge-futuro">Agendado</span>' : ''}</span>
+                                <div class="actions-div"><span class="saldo-negativo">-${i.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</span>
+                                <button class="btn-action" style="color:var(--info)" onclick="iniciarEdicaoGasto(${i.id})">✏️</button>
+                                <button class="btn-action" onclick="excluirGasto(${i.id})">✕</button></div>`;
+                lGastos.appendChild(li);
+            });
+        }
+
+        if (typeof renderizarGraficos === "function") {
+            renderizarGraficos();
         }
     }
 
-    function atualizarSaldoAcumulado() {
-        let saldoTotal = 0;
-        (appDados.entradas || []).forEach(i => saldoTotal += i.valor);
-        (appDados.gastos || []).forEach(i => saldoTotal -= i.valor);
+async function iniciarEdicaoCategoriaPrincipal(id) {
+    const cat = appDados.categoriasEstruturadas[id];
+    if (!cat) return;
+    
+    // Pergunta o novo nome
+    const novoNome = prompt("Editar Nome da Categoria Principal:", cat.nome);
+    if (novoNome === null) return; // Se o usuário cancelar, interrompe
+    if (!novoNome.trim()) return alert("O nome da categoria não pode ficar vazio.");
+    
+    // Pergunta o novo ícone (Se você seguiu a alteração anterior de remover ícones, pode deixar em branco)
+    const novoIcone = prompt("Editar Ícone da Categoria (Deixe vazio se não quiser usar):", cat.icone || "");
+    if (novoIcone === null) return;
 
-        const exibicao = saldoOculto ? '••••' : formatarFloatParaMoedaInput(saldoTotal);
-        document.getElementById('txt-saldo-acumulado').innerText = exibicao;
-    }
-@@ -1116,7 +57,7 @@ <h2>Alterar Senha</h2>
-        const entradaFiltradasPeriodo = appDados.entradas.filter(i => {
-            const [ano, mes] = i.data.split('-').map(Number);
-            return (ano === anoFiltro && mes === mesFiltro) && i.origem.toLowerCase().includes(filtroTextoEntrada);
-        });
-        }).reverse();
+    // Aplica as alterações no objeto global
+    cat.nome = novoNome.trim();
+    cat.icone = novoIcone.trim();
+    
+    // Salva no banco de dados e atualiza todas as telas e seletores do sistema
+    await salvarNoDB();
+    atualizarSelectsCategorias();
+    atualizarFiltrosCategoriasBusca();
+    atualizarTela();
+    alert("📁 Categoria principal atualizada com sucesso!");
+}
 
-        const listaEntradas = document.getElementById('lista-entradas');
-        listaEntradas.innerHTML = '';
-@@ -1142,7 +83,7 @@ <h2>Alterar Senha</h2>
-            const matchTexto = i.desc.toLowerCase().includes(filtroTextoGasto);
-            const matchCategoria = !filtroCategoriaGasto || i.catPai === filtroCategoriaGasto;
-            return matchPeriodo && matchTexto && matchCategoria;
-        });
-        }).reverse();
+async function iniciarEdicaoSubcategoria(idPai, idSub) {
+    const catPai = appDados.categoriasEstruturadas[idPai];
+    if (!catPai || !catPai.subcategorias[idSub]) return;
+    const sub = catPai.subcategorias[idSub];
+    
+    // Pergunta o novo nome da subcategoria
+    const novoNome = prompt("Editar Nome da Subcategoria:", sub.nome);
+    if (novoNome === null) return;
+    if (!novoNome.trim()) return alert("O nome da subcategoria não pode ficar vazio.");
+    
+    // Pergunta o novo ícone da subcategoria
+    const novoIcone = prompt("Editar Ícone da Subcategoria:", sub.icone || "");
+    if (novoIcone === null) return;
 
-        const listaGastos = document.getElementById('lista-gastos');
-        listaGastos.innerHTML = '';
-@@ -1160,7 +101,4 @@ <h2>Alterar Senha</h2>
-            listaGastos.appendChild(li);
-        });
-        document.getElementById('lbl-contador-gastos').innerText = `Exibindo ${gastosFiltradosPeriodo.length} registros`;
-    }
+    // Aplica as alterações
+    sub.nome = novoNome.trim();
+    sub.icone = novoIcone.trim();
+    
+    // Salva e atualiza
+    await salvarNoDB();
+    atualizarSelectSubcategorias();
+    atualizarTela();
+    alert("🔹 Subcategoria atualizada com sucesso!");
+}                
 </script>
 </body>
 </html>
