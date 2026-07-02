@@ -356,6 +356,9 @@
 </div>
 
 <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+    alert("Erro na linha " + lineno + ": " + message);
+};
     // 1. A variável que você acabou de criar
     let saldoOculto = true; 
 
