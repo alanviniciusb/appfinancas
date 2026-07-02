@@ -83,10 +83,10 @@
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .color-box { width: 12px; height: 12px; border-radius: 3px; }
 
-        .theme-toggle { position: fixed; bottom: 15px; right: 15px; background: #34495e; color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 999; }
+        .theme-toggle { position: fixed; bottom: 15px; right: 15px; background: #34495e; color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 999; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
         .comparativo-box { font-size: 0.85rem; color: #7f8c8d; margin-top: 4px; text-align: right; }
 
-        #tela-bloqueio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #2c3e50; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; color: white; }
+        #tela-bloqueio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #2c3e50; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
         .lock-container { width: 80%; max-width: 300px; text-align: center; }
         .lock-input { text-align: center; font-size: 2rem; letter-spacing: 10px; margin-bottom: 15px; color: #2c3e50; background: white; }
         .btn-cancelar-lock { background: transparent; border: 1px solid #ffffff44; color: #bdc3c7; margin-top: 10px; font-size: 0.9rem; padding: 10px; display: none; }
@@ -220,7 +220,7 @@
         </div>
         <div class="form-group">
             <label>Categoria Principal</label>
-            <select id="gasto-cat-principal" onchange="atualizarSelectsCategorias()"></select>
+            <select id="gasto-cat-principal" onchange="atualizarSelectSubcategorias()"></select>
         </div>
         <div class="form-group">
             <label>Subcategoria</label>
@@ -356,10 +356,8 @@
 </div>
 
 <script>
-    // 1. A variável que você acabou de criar
     let saldoOculto = true; 
 
-    // 2. A função que faz o clique do olho funcionar
     function alternarVisibilidadeSaldo() {
         saldoOculto = !saldoOculto; 
         
@@ -368,8 +366,9 @@
             btn.innerText = saldoOculto ? "🙈" : "👁️"; 
         }
         
-        atualizarTela(); 
+        atualizarSaldoAcumulado();
     }
+
     let appDados = { 
         senha: '', tema: 'light', entradas: [], gastos: [], 
         categoriasEstruturadas: {}, graficoVisivel: true, tipoGrafico: 'pizza'
@@ -631,7 +630,7 @@ if ('serviceWorker' in navigator) {
         secao.style.display = secao.style.display === 'block' ? 'none' : 'block';
     }
 
-    async function ejecutarAlteracaoSenha() {
+    async function executarAlteracaoSenha() {
         const atual = document.getElementById('pwd-atual').value;
         const nova = document.getElementById('pwd-nova').value;
         const confirma = document.getElementById('pwd-confirma').value;
@@ -779,7 +778,6 @@ if ('serviceWorker' in navigator) {
     const iconeInput = document.getElementById('cat-icone');
     
     const nome = nomeInput.value.trim();
-    // Captura o ícone digitado ou define uma pasta 📁 como padrão caso fique vazio
     const icone = iconeInput.value.trim() || "📁"; 
     
     if (!nome) return alert("Por favor, digite o nome da categoria.");
@@ -788,16 +786,13 @@ if ('serviceWorker' in navigator) {
     
     await salvarNoDB(); 
     
-    // Limpa ambos os campos de texto após criar
     nomeInput.value = ''; 
     iconeInput.value = ''; 
     
-    // Atualiza todos os componentes visuais do sistema
     atualizarSelectsCategorias(); 
     atualizarFiltrosCategoriasBusca();
     atualizarTela();
     
-    // Alerta de sucesso com o ícone escolhido
     alert(`${icone} Categoria principal "${nome}" criada com sucesso!`);
 }
 
@@ -815,15 +810,12 @@ async function criarSubcategoria() {
     
     await salvarNoDB(); 
     
-    // 1. LIMPA OS INPUTS
     nomeInput.value = '';
     iconeInput.value = '';
     
-    // Atualiza o sistema
     atualizarSelectSubcategorias();
     atualizarTela();
     
-    // 2. EXIBE O ALERTA
     alert(`${icone} Subcategoria criada com sucesso!`);
 }
 
@@ -865,7 +857,7 @@ async function criarSubcategoria() {
         const tipoRecorrencia = document.getElementById('gasto-recorrencia').value;
         
         if (!idPai || valorTotalCalculado <= 0) return alert('Campos inválidos.');
-        const nomeSub = (appDados.categoriasEstruturadas[idPai] && appDados.categoriasEstruturadas[idPai].subcategorias[idSub]) ? appDados.categoriasEstruturadas[idPai].subcategorias[idSub].nome : 'Geral';
+        const nomeSub = (appDados.categoriasEstruturadas[idPai] && appDados.categoriasEstruturadas[idPai].subcategorias[idSub]) ? appDados.categoriasEstruturadas[idPai].subcategorias[idSub].nome : '';
         const descBase = inputDesc.value.trim() || nomeSub;
 
         if (idEdicaoGasto !== null) {
@@ -998,238 +990,150 @@ async function criarSubcategoria() {
         if (!appDados.graficoVisivel) { container.style.display = 'none'; return; }
         container.style.display = 'flex';
         const filtroAtual = document.getElementById('filtro-mes-ano').value;
-        const hojeStr = obterDataHoje();
+        
+        let rendaTotalPeriodo = 0, gastototalPeriodo = 0;
+        const [anoFiltro, mesFiltro] = filtroAtual.split('-').map(Number);
 
-        const gastosMesEfetivos = (appDados.gastos || []).filter(i => i.data && i.data.startsWith(filtroAtual) && i.data <= hojeStr);
-        const totalGasto = gastosMesEfetivos.reduce((s, i) => s + i.valor, 0);
+        appDados.entradas.forEach(i => {
+            const [ano, mes] = i.data.split('-').map(Number);
+            if (ano === anoFiltro && mes === mesFiltro) rendaTotalPeriodo += i.valor;
+        });
 
-        if (totalGasto === 0) {
-            elPizza.style.display = 'none'; elBarras.style.display = 'none';
-            elLegenda.innerText = "Nenhum débito efetivo no período selecionado."; return;
-        }
-
-        const dadosAgrupados = {};
-        gastosMesEfetivos.forEach(g => {
-            const catInfo = appDados.categoriasEstruturadas[g.catPai] || { nome: "Outros", icone: "📦" };
-            dadosAgrupados[catInfo.nome] = (dadosAgrupados[catInfo.nome] || 0) + g.valor;
+        const datasGastos = {};
+        appDados.gastos.forEach(i => {
+            const [ano, mes] = i.data.split('-').map(Number);
+            if (ano === anoFiltro && mes === mesFiltro) {
+                gastototalPeriodo += i.valor;
+                const chave = appDados.categoriasEstruturadas[i.catPai]?.nome || 'Outros';
+                datasGastos[chave] = (datasGastos[chave] || 0) + i.valor;
+            }
         });
 
         if (appDados.tipoGrafico === 'pizza') {
-            elPizza.style.display = 'block'; elBarras.style.display = 'none';
-            let acumulado = 0; const partesGradient = []; let corIdx = 0;
-            for (const [nome, valor] of Object.entries(dadosAgrupados)) {
-                const pct = (valor / totalGasto) * 100; const cor = CORES[corIdx % CORES.length]; corIdx++;
-                partesGradient.push(`${cor} ${acumulado}% ${(acumulado + pct).toFixed(1)}%`); acumulado += pct;
-                const itemLeg = document.createElement('div'); itemLeg.className = 'legend-item';
-                itemLeg.innerHTML = `<div class="color-box" style="background:${cor}"></div> <span>${nome}: ${pct.toFixed(0)}%</span>`;
-                elLegenda.appendChild(itemLeg);
+            let gradiente = 'conic-gradient(';
+            let porcentagem = 0;
+            for (const [cat, valor] of Object.entries(datasGastos)) {
+                const pct = (valor / (gastototalPeriodo || 1)) * 100;
+                const cor = CORES[Object.keys(datasGastos).indexOf(cat) % CORES.length];
+                gradiente += `${cor} ${porcentagem}% ${porcentagem + pct}%, `;
+                porcentagem += pct;
             }
-            elPizza.style.background = `conic-gradient(${partesGradient.join(', ')})`;
+            gradiente += '#ccc ' + porcentagem + '%)';
+            elPizza.style.background = gradiente;
+            elPizza.style.display = 'block';
+            elBarras.style.display = 'none';
         } else {
-            elPizza.style.display = 'none'; elBarras.style.display = 'flex';
-            let corIdx = 0;
-            for (const [nome, valor] of Object.entries(dadosAgrupados)) {
-                const pct = (valor / totalGasto) * 100; const cor = CORES[corIdx % CORES.length]; corIdx++;
-                const barRow = document.createElement('div'); barRow.className = 'bar-row';
-                barRow.innerHTML = `
-                    <div class="bar-label-div"><span><strong>${nome}</strong></span><span>${valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})} (${pct.toFixed(0)}%)</span></div>
-                    <div class="bar-background"><div class="bar-fill" style="width: ${pct}%; background: ${cor}"></div></div>`;
-                elBarras.appendChild(barRow);
+            elPizza.style.display = 'none';
+            elBarras.style.display = 'flex';
+            for (const [cat, valor] of Object.entries(datasGastos)) {
+                const pct = (valor / (gastototalPeriodo || 1)) * 100;
+                const cor = CORES[Object.keys(datasGastos).indexOf(cat) % CORES.length];
+                const row = document.createElement('div'); row.className = 'bar-row';
+                row.innerHTML = `<div class="bar-label-div"><span>${cat}</span><span>${valor.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</span></div>
+                    <div class="bar-background"><div class="bar-fill" style="background: ${cor}; width: ${pct}%;"></div></div>`;
+                elBarras.appendChild(row);
             }
         }
+
+        elLegenda.innerHTML = '';
+        let idx = 0;
+        for (const [cat, valor] of Object.entries(datasGastos)) {
+            const cor = CORES[idx++ % CORES.length];
+            const item = document.createElement('div'); item.className = 'legend-item';
+            item.innerHTML = `<div class="color-box" style="background: ${cor};"></div><span>${cat}</span>`;
+            elLegenda.appendChild(item);
+        }
+    }
+
+    function atualizarSaldoAcumulado() {
+        let saldoTotal = 0;
+        (appDados.entradas || []).forEach(i => saldoTotal += i.valor);
+        (appDados.gastos || []).forEach(i => saldoTotal -= i.valor);
+
+        const exibicao = saldoOculto ? '••••' : formatarFloatParaMoedaInput(saldoTotal);
+        document.getElementById('txt-saldo-acumulado').innerText = exibicao;
     }
 
     function atualizarTela() {
-        const elFiltro = document.getElementById('filtro-mes-ano');
-        const filtroAtual = elFiltro ? elFiltro.value : obterDataHoje().substring(0, 7);
-        const hojeStr = obterDataHoje();
+        renderizarGraficos();
 
-        const elBuscaEntrada = document.getElementById('busca-entrada-texto');
-        const buscaEntradaTxt = elBuscaEntrada ? elBuscaEntrada.value.toLowerCase().trim() : '';
+        const filtroAtual = document.getElementById('filtro-mes-ano').value;
+        const [anoFiltro, mesFiltro] = filtroAtual.split('-').map(Number);
         
-        const elBuscaGasto = document.getElementById('busca-gasto-texto');
-        const buscaGastoTxt = elBuscaGasto ? elBuscaGasto.value.toLowerCase().trim() : '';
+        let rendaTotalPeriodo = 0, gastototalPeriodo = 0, rendaMesAnterior = 0;
+        const mesAnterior = mesFiltro === 1 ? 12 : mesFiltro - 1;
+        const anoAnterior = mesFiltro === 1 ? anoFiltro - 1 : anoFiltro;
+
+        appDados.entradas.forEach(i => {
+            const [ano, mes] = i.data.split('-').map(Number);
+            if (ano === anoFiltro && mes === mesFiltro) rendaTotalPeriodo += i.valor;
+            if (ano === anoAnterior && mes === mesAnterior) rendaMesAnterior += i.valor;
+        });
+
+        appDados.gastos.forEach(i => {
+            const [ano, mes] = i.data.split('-').map(Number);
+            if (ano === anoFiltro && mes === mesFiltro) gastototalPeriodo += i.valor;
+        });
+
+        document.getElementById('txt-recebido').innerText = formatarFloatParaMoedaInput(rendaTotalPeriodo);
+        document.getElementById('txt-gasto').innerText = formatarFloatParaMoedaInput(gastototalPeriodo);
+        document.getElementById('txt-saldo').innerText = formatarFloatParaMoedaInput(rendaTotalPeriodo - gastototalPeriodo);
         
-        const elBuscaGastoCat = document.getElementById('busca-gasto-categoria');
-        const buscaGastoCat = elBuscaGastoCat ? elBuscaGastoCat.value : '';
+        const comparacao = rendaTotalPeriodo - rendaMesAnterior;
+        const comparativoText = `vs. mês anterior: ${comparacao >= 0 ? '+' : ''} ${formatarFloatParaMoedaInput(Math.abs(comparacao))}`;
+        document.getElementById('txt-comparativo').innerText = comparativoText;
 
-        const entradasMes = (appDados.entradas || []).filter(i => i.data && i.data.startsWith(filtroAtual));
-        const gastosMes = (appDados.gastos || []).filter(i => i.data && i.data.startsWith(filtroAtual));
+        const pctConsumo = (rendaTotalPeriodo > 0) ? (gastototalPeriodo / rendaTotalPeriodo) * 100 : 0;
+        document.getElementById('txt-pct-consumo').innerText = pctConsumo.toFixed(1) + '%';
+        document.getElementById('bar-pct-consumo').style.width = Math.min(pctConsumo, 100) + '%';
 
-        const totalRecebidoEfetivo = entradasMes.filter(i => i.data <= hojeStr).reduce((s, i) => s + i.valor, 0);
-        const totalGastoEfetivo = gastosMes.filter(i => i.data <= hojeStr).reduce((s, i) => s + i.valor, 0);
-        const saldoMesEfetivo = totalRecebidoEfetivo - totalGastoEfetivo;
+        atualizarSaldoAcumulado();
 
-        if (document.getElementById('txt-recebido')) document.getElementById('txt-recebido').innerText = totalRecebidoEfetivo.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-        if (document.getElementById('txt-gasto')) document.getElementById('txt-gasto').innerText = totalGastoEfetivo.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+        const filtroTextoEntrada = document.getElementById('busca-entrada-texto').value.toLowerCase();
+        const entradaFiltradasPeriodo = appDados.entradas.filter(i => {
+            const [ano, mes] = i.data.split('-').map(Number);
+            return (ano === anoFiltro && mes === mesFiltro) && i.origem.toLowerCase().includes(filtroTextoEntrada);
+        });
         
-        const elSaldo = document.getElementById('txt-saldo');
-        if (elSaldo) {
-            elSaldo.innerText = saldoMesEfetivo.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-            elSaldo.className = saldoMesEfetivo >= 0 ? 'saldo-positivo' : 'saldo-negativo';
-        }
+        const listaEntradas = document.getElementById('lista-entradas');
+        listaEntradas.innerHTML = '';
+        entradaFiltradasPeriodo.forEach(i => {
+            const li = document.createElement('li'); li.className = 'history-item';
+            li.innerHTML = `<div style="flex-grow:1;"><span>${i.origem}</span><br><small style="color:#7f8c8d;">${i.data}</small></div>
+                <span class="saldo-positivo" style="margin-right:10px;">${formatarFloatParaMoedaInput(i.valor)}</span>
+                <div class="actions-div">
+                    <button class="btn-action" onclick="iniciarEdicaoEntrada(${i.id})" title="Editar">✏️</button>
+                    <button class="btn-action" onclick="excluirEntrada(${i.id})" title="Excluir">🗑️</button>
+                </div>`;
+            listaEntradas.appendChild(li);
+        });
+        document.getElementById('lbl-contador-entradas').innerText = `Exibindo ${entradaFiltradasPeriodo.length} registros`;
 
-        const globalEntradasEfetivas = (appDados.entradas || []).filter(i => i.data && i.data <= hojeStr).reduce((sum, item) => sum + item.valor, 0);
-        const globalGastosEfetivos = (appDados.gastos || []).filter(i => i.data && i.data <= hojeStr).reduce((sum, item) => sum + item.valor, 0);
-        const saldoAcumuladoGlobal = globalEntradasEfetivas - globalGastosEfetivos;
+        const filtroTextoGasto = document.getElementById('busca-gasto-texto').value.toLowerCase();
+        const filtroCategoriaGasto = document.getElementById('busca-gasto-categoria').value;
+        const gastosFiltradosPeriodo = appDados.gastos.filter(i => {
+            const [ano, mes] = i.data.split('-').map(Number);
+            const matchPeriodo = ano === anoFiltro && mes === mesFiltro;
+            const matchTexto = i.desc.toLowerCase().includes(filtroTextoGasto);
+            const matchCategoria = !filtroCategoriaGasto || i.catPai === filtroCategoriaGasto;
+            return matchPeriodo && matchTexto && matchCategoria;
+        });
 
-        const elSaldoAcumulado = document.getElementById('txt-saldo-acumulado');
-        if (elSaldoAcumulado) {
-            elSaldoAcumulado.innerText = saldoAcumuladoGlobal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-            elSaldoAcumulado.className = saldoAcumuladoGlobal >= 0 ? 'saldo-positivo' : 'saldo-negativo';
-        }
-        const elementoSaldo = document.getElementById('txt-saldo-acumulado'); 
-        if (elementoSaldo) {
-            if (saldoOculto) {
-            // Se o usuário quis esconder, mostra as bolinhas
-            elementoSaldo.innerText = "R$ •••••"; 
-        } else {
-            // Se estiver visível, mostra o valor formatado normal do seu app
-            elementoSaldo.innerText = formatarMoeda(elementoSaldo); 
-        }
+        const listaGastos = document.getElementById('lista-gastos');
+        listaGastos.innerHTML = '';
+        gastosFiltradosPeriodo.forEach(i => {
+            const catInfo = appDados.categoriasEstruturadas[i.catPai] || { icone: '📁', nome: 'Outros' };
+            const li = document.createElement('li'); li.className = 'history-item';
+            li.innerHTML = `<div style="flex-grow:1;"><span>${catInfo.icone} ${i.desc}</span><br><small style="color:#7f8c8d;">${i.data}</small></div>
+                <span class="saldo-negativo" style="margin-right:10px;">${formatarFloatParaMoedaInput(i.valor)}</span>
+                <div class="actions-div">
+                    <button class="btn-action" onclick="iniciarEdicaoGasto(${i.id})" title="Editar">✏️</button>
+                    <button class="btn-action" onclick="excluirGasto(${i.id})" title="Excluir">🗑️</button>
+                </div>`;
+            listaGastos.appendChild(li);
+        });
+        document.getElementById('lbl-contador-gastos').innerText = `Exibindo ${gastosFiltradosPeriodo.length} registros`;
     }
-        let pctConsumo = 0;
-        if (totalRecebidoEfetivo > 0) pctConsumo = Math.round((totalGastoEfetivo / totalRecebidoEfetivo) * 100);
-        else if (totalGastoEfetivo > 0) pctConsumo = 100;
-        
-        if (document.getElementById('txt-pct-consumo')) document.getElementById('txt-pct-consumo').innerText = `${pctConsumo}%`;
-
-        const barraConsumo = document.getElementById('bar-pct-consumo');
-        if (barraConsumo) {
-    // 1. Atualiza a largura da barra
-           barraConsumo.style.width = `${Math.min(pctConsumo, 100)}%`;
-    
-    // 2. Altera a cor dinamicamente baseada na porcentagem gasta
-          if (pctConsumo < 70) {
-              barraConsumo.style.backgroundColor = "var(--primary)"; // Verde (Seguro)
-        } else if (pctConsumo >= 70 && pctConsumo < 90) {
-              barraConsumo.style.backgroundColor = "var(--warning)"; // Amarelo (Atenção)
-        } else {
-              barraConsumo.style.backgroundColor = "var(--danger)";  // Vermelho (Crítico)
-    }
-}
-
-        const partes = filtroAtual.split('-');
-        const dataAnterior = new Date(parseInt(partes[0]), parseInt(partes[1]) - 2, 1);
-        const filtroAnterior = `${dataAnterior.getFullYear()}-${String(dataAnterior.getMonth() + 1).padStart(2, '0')}`;
-        const totalGastoAnteriorEfetivo = (appDados.gastos || []).filter(i => i.data && i.data.startsWith(filtroAnterior) && i.data <= hojeStr).reduce((s, i) => s + i.valor, 0);
-
-        const elComp = document.getElementById('txt-comparativo');
-        if (elComp) {
-            if (totalGastoAnteriorEfetivo === 0) { elComp.innerText = "vs. mês anterior: dados insuficientes"; } 
-            else {
-                const variacao = ((totalGastoEfetivo - totalGastoAnteriorEfetivo) / totalGastoAnteriorEfetivo) * 100;
-                elComp.innerText = variacao > 0 ? `▲ Aumentou ${variacao.toFixed(1)}% vs. mês passado` : `▼ Diminuiu ${Math.abs(variacao).toFixed(1)}% vs. mês passado`;
-                elComp.style.color = variacao > 0 ? "var(--danger)" : "var(--primary)";
-            }
-        }
-
-        const lEntradas = document.getElementById('lista-entradas');
-        if (lEntradas) {
-            lEntradas.innerHTML = '';
-            const entradasFiltradas = entradasMes.filter(i => (i.origem || "").toLowerCase().includes(buscaEntradaTxt));
-            if (document.getElementById('lbl-contador-entradas')) {
-                document.getElementById('lbl-contador-entradas').innerText = `Exibindo ${entradasFiltradas.length} de ${entradasMes.length} registros`;
-            }
-            
-            entradasFiltradas.reverse().forEach(i => {
-                const li = document.createElement('li'); const ehFuturo = i.data > hojeStr;
-                li.className = `history-item ${ehFuturo ? 'item-futuro-linha' : ''}`;
-                li.innerHTML = `<span>💰 <strong>${i.origem || 'Entrada'}</strong> (${i.data.split('-')[2]}/${i.data.split('-')[1]}) ${ehFuturo ? '<span class="badge-futuro">Agendado</span>' : ''}</span>
-                                <div class="actions-div"><span class="saldo-positivo">+${i.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</span>
-                                <button class="btn-action" style="color:var(--info)" onclick="iniciarEdicaoEntrada(${i.id})">✏️</button>
-                                <button class="btn-action" onclick="excluirEntrada(${i.id})">✕</button></div>`;
-                lEntradas.appendChild(li);
-            });
-        }
-
-        const lGastos = document.getElementById('lista-gastos');
-        if (lGastos) {
-            lGastos.innerHTML = '';
-            const gastosFiltrados = gastosMes.filter(i => {
-                const textoGasto = (i.desc || i.descricao || "").toLowerCase();
-                const matchTexto = textoGasto.includes(buscaGastoTxt);
-                const matchCategoria = buscaGastoCat === "" || i.catPai === buscaGastoCat;
-                return matchTexto && matchCategoria;
-            });
-            
-            if (document.getElementById('lbl-contador-gastos')) {
-                document.getElementById('lbl-contador-gastos').innerText = `Exibindo ${gastosFiltrados.length} de ${gastosMes.length} registros`;
-            }
-
-            gastosFiltrados.reverse().forEach(i => {
-                const categorias = appDados.categoriasEstruturadas || {};
-                const catPaiInfo = categorias[i.catPai] || { icone: "📦", nome: "Outros" };
-                const catSubInfo = (catPaiInfo.subcategorias && i.catSub) ? (catPaiInfo.subcategorias[i.catSub] || { icone: "🔹", nome: "" }) : { icone: "🔹", nome: "" };
-                
-                const ehFuturo = i.data > hojeStr;
-                const li = document.createElement('li'); 
-                li.className = `history-item ${ehFuturo ? 'item-futuro-linha' : ''}`;
-
-                const textoExibir = i.desc || i.descricao || "Gasto sem descrição";
-
-                li.innerHTML = `<span>${catSubInfo.icone || "🔹"} <strong>${textoExibir}</strong> (${i.data.split('-')[2]}/${i.data.split('-')[1]}) ${ehFuturo ? '<span class="badge-futuro">Agendado</span>' : ''}</span>
-                                <div class="actions-div"><span class="saldo-negativo">-${i.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</span>
-                                <button class="btn-action" style="color:var(--info)" onclick="iniciarEdicaoGasto(${i.id})">✏️</button>
-                                <button class="btn-action" onclick="excluirGasto(${i.id})">✕</button></div>`;
-                lGastos.appendChild(li);
-            });
-        }
-
-        if (typeof renderizarGraficos === "function") {
-            renderizarGraficos();
-        }
-    }
-
-async function iniciarEdicaoCategoriaPrincipal(id) {
-    const cat = appDados.categoriasEstruturadas[id];
-    if (!cat) return;
-    
-    // Pergunta o novo nome
-    const novoNome = prompt("Editar Nome da Categoria Principal:", cat.nome);
-    if (novoNome === null) return; // Se o usuário cancelar, interrompe
-    if (!novoNome.trim()) return alert("O nome da categoria não pode ficar vazio.");
-    
-    // Pergunta o novo ícone (Se você seguiu a alteração anterior de remover ícones, pode deixar em branco)
-    const novoIcone = prompt("Editar Ícone da Categoria (Deixe vazio se não quiser usar):", cat.icone || "");
-    if (novoIcone === null) return;
-
-    // Aplica as alterações no objeto global
-    cat.nome = novoNome.trim();
-    cat.icone = novoIcone.trim();
-    
-    // Salva no banco de dados e atualiza todas as telas e seletores do sistema
-    await salvarNoDB();
-    atualizarSelectsCategorias();
-    atualizarFiltrosCategoriasBusca();
-    atualizarTela();
-    alert("📁 Categoria principal atualizada com sucesso!");
-}
-
-async function iniciarEdicaoSubcategoria(idPai, idSub) {
-    const catPai = appDados.categoriasEstruturadas[idPai];
-    if (!catPai || !catPai.subcategorias[idSub]) return;
-    const sub = catPai.subcategorias[idSub];
-    
-    // Pergunta o novo nome da subcategoria
-    const novoNome = prompt("Editar Nome da Subcategoria:", sub.nome);
-    if (novoNome === null) return;
-    if (!novoNome.trim()) return alert("O nome da subcategoria não pode ficar vazio.");
-    
-    // Pergunta o novo ícone da subcategoria
-    const novoIcone = prompt("Editar Ícone da Subcategoria:", sub.icone || "");
-    if (novoIcone === null) return;
-
-    // Aplica as alterações
-    sub.nome = novoNome.trim();
-    sub.icone = novoIcone.trim();
-    
-    // Salva e atualiza
-    await salvarNoDB();
-    atualizarSelectSubcategorias();
-    atualizarTela();
-    alert("🔹 Subcategoria atualizada com sucesso!");
-}                
 </script>
 </body>
 </html>
