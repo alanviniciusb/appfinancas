@@ -166,9 +166,13 @@
         </div>
         <div class="balance-box" style="font-size: 1.4rem; margin-top: 5px;">
             <span>Saldo Geral Acumulado:</span>
-           <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
         
-        <p id="txt-saldo-acumulado" style="margin: 0;">R$ 0,00</p> 
+        <span id="txt-saldo-geral" style="font-size: 24px; font-weight: bold;">R$ 0,00</span>
+        
+        <button id="btn-janela-saldo" onclick="alternarVisibilidadeSaldo()" style="background: none; border: none; cursor: pointer; font-size: 22px; padding: 0;">
+            🙈
+        </button>
         
         
     </div>
@@ -352,7 +356,20 @@
 </div>
 
 <script>
-    
+    // 1. A variável que você acabou de criar
+    let saldoOculto = true; 
+
+    // 2. A função que faz o clique do olho funcionar
+    function alternarVisibilidadeSaldo() {
+        saldoOculto = !saldoOculto; 
+        
+        const btn = document.getElementById('btn-janela-saldo');
+        if (btn) {
+            btn.innerText = saldoOculto ? "🙈" : "👁️"; 
+        }
+        
+        atualizarTela(); 
+    }
     let appDados = { 
         senha: '', tema: 'light', entradas: [], gastos: [], 
         categoriasEstruturadas: {}, graficoVisivel: true, tipoGrafico: 'pizza'
@@ -1061,7 +1078,16 @@ async function criarSubcategoria() {
             elSaldoAcumulado.innerText = saldoAcumuladoGlobal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
             elSaldoAcumulado.className = saldoAcumuladoGlobal >= 0 ? 'saldo-positivo' : 'saldo-negativo';
         }
-
+        const elementoSaldo = document.getElementById('txt-saldo-acumulado'); 
+        if (elementoSaldo) {
+            if (saldoOculto) {
+            // Se o usuário quis esconder, mostra as bolinhas
+            elementoSaldo.innerText = "R$ •••••"; 
+        } else {
+            // Se estiver visível, mostra o valor formatado normal do seu app
+            elementoSaldo.innerText = formatarMoeda(totalSaldo); 
+        }
+    }
         let pctConsumo = 0;
         if (totalRecebidoEfetivo > 0) pctConsumo = Math.round((totalGastoEfetivo / totalRecebidoEfetivo) * 100);
         else if (totalGastoEfetivo > 0) pctConsumo = 100;
