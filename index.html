@@ -1212,9 +1212,22 @@ async function criarSubcategoria() {
                 const li = document.createElement('li'); 
                 li.className = `history-item ${ehFuturo ? 'item-futuro-linha' : ''}`;
 
-                const textoExibir = (i.desc || i.descricao || "").trim() !== "" 
-                    ? (i.desc || i.descricao) 
-                    : (catSubInfo.nome || "Gasto");
+                const descPreenchida = (i.desc || i.descricao || "").trim();
+                const nomeParaExibir = descPreenchida !== "" ? descPreenchida : (catSubInfo.nome || "Gasto");
+
+                // 2. Lógica para estilizar (deixa em itálico se foi gerado pela subcategoria)
+                const estiloTexto = descPreenchida !== "" ? `<strong>${nomeParaExibir}</strong>` : `<em>${nomeParaExibir}</em>`;
+
+                // 3. Renderização no HTML
+               const ehFuturo = i.data > hojeStr;
+               const li = document.createElement('li'); 
+               li.className = `history-item ${ehFuturo ? 'item-futuro-linha' : ''}`;
+
+               li.innerHTML = `<span>${catSubInfo.icone || "🔹"} ${estiloTexto} (${i.data.split('-')[2]}/${i.data.split('-')[1]}) ${ehFuturo ? '<span class="badge-futuro">Agendado</span>' : ''}</span>
+                <div class="actions-div"><span class="saldo-negativo">-${i.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</span>
+                <button class="btn-action" style="color:var(--info)" onclick="iniciarEdicaoGasto(${i.id})">✏️</button>
+                <button class="btn-action" onclick="excluirGasto(${i.id})">✕</button></div>`;
+                lGastos.appendChild(li);
 
                 li.innerHTML = `<span>${catSubInfo.icone || "🔹"} <strong>${textoExibir}</strong> (${i.data.split('-')[2]}/${i.data.split('-')[1]}) ${ehFuturo ? '<span class="badge-futuro">Agendado</span>' : ''}</span>
                                 <div class="actions-div"><span class="saldo-negativo">-${i.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</span>
