@@ -854,7 +854,7 @@ async function criarSubcategoria() {
     }
 
     // --- LOGICA DE LANÇAMENTOS E AUTOMAÇÃO DE RECORRÊNCIA ---
-    sync function adicionarEntrada() {
+    async function adicionarEntrada() {
     const inputOrigem = document.getElementById('renda-origem'); 
     const inputValor = document.getElementById('renda-valor');
     const inputData = document.getElementById('renda-data'); // Referência à data
@@ -903,14 +903,21 @@ async function criarSubcategoria() {
 
     await salvarNoDB();
     
-    // RESET DOS CAMPOS E SELECTS
-    inputDesc.value = ''; 
-    inputValor.value = ''; 
-    inputData.value = obterDataHoje();
-    inputRecorrencia.value = 'unico';
-    selectPai.value = ''; // Reseta a categoria principal
-    selectSub.innerHTML = ''; // Limpa as opções de subcategoria
+   // RESET DOS CAMPOS
+    document.getElementById('gasto-nome').value = ''; 
+    document.getElementById('gasto-valor').value = ''; 
+    document.getElementById('gasto-data').value = obterDataHoje();
+    document.getElementById('gasto-recorrencia').value = 'unico';
+
+    // RESET DOS SELECTS PARA "SELECIONE"
+    const selectPai = document.getElementById('gasto-cat-principal');
+    const selectSub = document.getElementById('gasto-subcategoria');
+
+    selectPai.value = ""; // Volta para a opção vazia (Selecione categoria principal)
     
+    // Limpa e recria a opção padrão da subcategoria
+    selectSub.innerHTML = '<option value="" disabled selected>Selecione a subcategoria</option>';
+
     atualizarTela();
     alert("💸 Gasto registrado com sucesso!");
 }
