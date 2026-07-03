@@ -1212,7 +1212,9 @@ async function criarSubcategoria() {
                 const li = document.createElement('li'); 
                 li.className = `history-item ${ehFuturo ? 'item-futuro-linha' : ''}`;
 
-                const textoExibir = i.desc || i.descricao || "Gasto sem descrição";
+                const textoExibir = (i.desc || i.descricao || "").trim() !== "" 
+                    ? (i.desc || i.descricao) 
+                    : (catSubInfo.nome || "Gasto");
 
                 li.innerHTML = `<span>${catSubInfo.icone || "🔹"} <strong>${textoExibir}</strong> (${i.data.split('-')[2]}/${i.data.split('-')[1]}) ${ehFuturo ? '<span class="badge-futuro">Agendado</span>' : ''}</span>
                                 <div class="actions-div"><span class="saldo-negativo">-${i.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</span>
