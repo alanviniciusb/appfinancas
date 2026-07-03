@@ -903,21 +903,14 @@ async function criarSubcategoria() {
 
     await salvarNoDB();
     
-   // RESET DOS CAMPOS
-    document.getElementById('gasto-nome').value = ''; 
-    document.getElementById('gasto-valor').value = ''; 
-    document.getElementById('gasto-data').value = obterDataHoje();
-    document.getElementById('gasto-recorrencia').value = 'unico';
-
-    // RESET DOS SELECTS PARA "SELECIONE"
-    const selectPai = document.getElementById('gasto-cat-principal');
-    const selectSub = document.getElementById('gasto-subcategoria');
-
-    selectPai.value = ""; // Volta para a opção vazia (Selecione categoria principal)
+    // RESET DOS CAMPOS E SELECTS
+    inputDesc.value = ''; 
+    inputValor.value = ''; 
+    inputData.value = obterDataHoje();
+    inputRecorrencia.value = 'unico';
+    selectPai.value = ''; // Reseta a categoria principal
+    selectSub.innerHTML = ''; // Limpa as opções de subcategoria
     
-    // Limpa e recria a opção padrão da subcategoria
-    selectSub.innerHTML = '<option value="" disabled selected>Selecione a subcategoria</option>';
-
     atualizarTela();
     alert("💸 Gasto registrado com sucesso!");
 }
@@ -1095,18 +1088,16 @@ async function criarSubcategoria() {
             elSaldoAcumulado.innerText = saldoAcumuladoGlobal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
             elSaldoAcumulado.className = saldoAcumuladoGlobal >= 0 ? 'saldo-positivo' : 'saldo-negativo';
         }
-        const elementoSaldo = document.getElementById('txt-saldo-acumulado'); 
-if (elementoSaldo) {
-    if (typeof window.saldoOculto !== 'undefined' && window.saldoOculto) {
-        // Se a senha estiver ativa, esconde
-        elementoSaldo.innerText = "R$ •••••"; 
-    } else {
-        // Se estiver visível, mostra o valor formatado
-        // Usamos uma verificação extra para evitar o erro de travamento
-        const valorExibicao = typeof saldoAcumuladoGlobal === 'number' ? saldoAcumuladoGlobal : 0;
-        elementoSaldo.innerText = valorExibicao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+       const elementoSaldo = document.getElementById('txt-saldo-acumulado'); 
+        if (elementoSaldo) {
+            if (saldoOculto) {
+            // Se o usuário quis esconder, mostra as bolinhas
+            elementoSaldo.innerText = "R$ •••••"; 
+        } else {
+            // Se estiver visível, mostra o valor formatado normal do seu app
+            elementoSaldo.innerText = formatarMoeda(elementoSaldo); 
+        }
     }
-}
         let pctConsumo = 0;
         if (totalRecebidoEfetivo > 0) pctConsumo = Math.round((totalGastoEfetivo / totalRecebidoEfetivo) * 100);
         else if (totalGastoEfetivo > 0) pctConsumo = 100;
