@@ -723,18 +723,31 @@ if ('serviceWorker' in navigator) {
     }
 
     function atualizarSelectsCategorias() {
-        const selectPai = document.getElementById('select-cat-pai');
-        const selectGastoPai = document.getElementById('gasto-cat-principal');
-        const bkpPai = selectGastoPai.value;
-        selectPai.innerHTML = ''; selectGastoPai.innerHTML = '';
-        for (const [id, cat] of Object.entries(appDados.categoriasEstruturadas)) {
-            const opt = document.createElement('option'); opt.value = id; opt.innerText = cat.nome;
-            selectPai.appendChild(opt.cloneNode(true)); selectGastoPai.appendChild(opt);
-        }
-        if(bkpPai && appDados.categoriasEstruturadas[bkpPai]) selectGastoPai.value = bkpPai;
-        listarCategoriasPaisGerenciamento(); atualizarSelectSubcategorias();
+    const selectPai = document.getElementById('select-cat-pai');
+    const selectGastoPai = document.getElementById('gasto-cat-principal');
+    const bkpPai = selectGastoPai.value;
+    
+    selectPai.innerHTML = ''; 
+    selectGastoPai.innerHTML = '';
+    
+    for (const [id, cat] of Object.entries(appDados.categoriasEstruturadas)) {
+        // Criamos a string com o ícone + nome
+        const textoOpcao = `${cat.icone || "📁"} ${cat.nome}`;
+        
+        const opt = document.createElement('option'); 
+        opt.value = id; 
+        opt.innerText = textoOpcao;
+        
+        // Clonamos para ambos os selects
+        selectPai.appendChild(opt.cloneNode(true)); 
+        selectGastoPai.appendChild(opt);
     }
-
+    
+    if(bkpPai && appDados.categoriasEstruturadas[bkpPai]) selectGastoPai.value = bkpPai;
+    
+    listarCategoriasPaisGerenciamento(); 
+    atualizarSelectSubcategorias();
+}
     function atualizarSelectSubcategorias() {
         const selectGastoPai = document.getElementById('gasto-cat-principal').value;
         const selectGastoSub = document.getElementById('gasto-subcategoria');
