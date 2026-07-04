@@ -722,23 +722,20 @@ if ('serviceWorker' in navigator) {
         leitor.readAsText(arquivo);
     }
 
-    function atualizarSelectsCategorias() {
+function atualizarSelectsCategorias() {
     const selectPai = document.getElementById('select-cat-pai');
     const selectGastoPai = document.getElementById('gasto-cat-principal');
     const bkpPai = selectGastoPai.value;
     
-    selectPai.innerHTML = ''; 
-    selectGastoPai.innerHTML = '';
+    // Limpa e adiciona a opção padrão (Placeholder)
+    selectPai.innerHTML = '<option value="">Escolha Categoria Principal</option>';
+    selectGastoPai.innerHTML = '<option value="">Escolha Categoria Principal</option>';
     
     for (const [id, cat] of Object.entries(appDados.categoriasEstruturadas)) {
-        // Criamos a string com o ícone + nome
-        const textoOpcao = `${cat.icone || "📁"} ${cat.nome}`;
-        
         const opt = document.createElement('option'); 
         opt.value = id; 
-        opt.innerText = textoOpcao;
+        opt.innerText = `${cat.icone || "📁"} ${cat.nome}`;
         
-        // Clonamos para ambos os selects
         selectPai.appendChild(opt.cloneNode(true)); 
         selectGastoPai.appendChild(opt);
     }
@@ -748,19 +745,27 @@ if ('serviceWorker' in navigator) {
     listarCategoriasPaisGerenciamento(); 
     atualizarSelectSubcategorias();
 }
-    function atualizarSelectSubcategorias() {
-        const selectGastoPai = document.getElementById('gasto-cat-principal').value;
-        const selectGastoSub = document.getElementById('gasto-subcategoria');
-        selectGastoSub.innerHTML = '';
-        if (!selectGastoPai || !appDados.categoriasEstruturadas[selectGastoPai]) return;
-        const subcategorias = appDados.categoriasEstruturadas[selectGastoPai].subcategorias;
-        for (const [id, sub] of Object.entries(subcategorias)) {
-            const opt = document.createElement('option'); opt.value = id; opt.innerText = `${sub.icone} ${sub.nome}`;
-            selectGastoSub.appendChild(opt);
-        }
-        listarSubcategoriasGerenciamento();
-    }
 
+function atualizarSelectSubcategorias() {
+    const selectGastoPai = document.getElementById('gasto-cat-principal').value;
+    const selectGastoSub = document.getElementById('gasto-subcategoria');
+    
+    // Limpa e adiciona a opção padrão
+    selectGastoSub.innerHTML = '<option value="">Escolha Subcategoria</option>';
+    
+    if (!selectGastoPai || !appDados.categoriasEstruturadas[selectGastoPai]) return;
+    
+    const subcategorias = appDados.categoriasEstruturadas[selectGastoPai].subcategorias;
+    for (const [id, sub] of Object.entries(subcategorias)) {
+        const opt = document.createElement('option'); 
+        opt.value = id; 
+        opt.innerText = `${sub.icone} ${sub.nome}`;
+        selectGastoSub.appendChild(opt);
+    }
+    
+    // A chamada abaixo continua existindo e não será omitida:
+    listarSubcategoriasGerenciamento();
+}
     function atualizarFiltrosCategoriasBusca() {
         const selectBusca = document.getElementById('busca-gasto-categoria');
         selectBusca.innerHTML = '<option value="">📁 Todas as Categorias</option>';
