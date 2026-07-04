@@ -1211,13 +1211,11 @@ gastosFiltrados.reverse().forEach(i => {
     const catSubInfo = subCats[i.catSub] || { nome: "", icone: "🔹" };
     
     // --- LÓGICA CORRIGIDA ---
-    // 1. Prioriza a descrição manual digitada pelo usuário
-    // 2. Se for vazia, tenta o nome da subcategoria
-    // 3. Se tudo for vazio, cai em "Gasto"
     const descManual = (i.desc || i.descricao || "").trim();
     const nomeSub = (catSubInfo.nome || "").trim();
-    
-    let nomeParaExibir = descManual !== "" ? descManual : (nomeSub !== "" ? nomeSub : "Gasto");
+
+    // Prioriza: Descrição > Nome da Subcategoria > Nome da Categoria Principal
+    let nomeParaExibir = descManual !== "" ? descManual : (nomeSub !== "" ? nomeSub : catPaiInfo.nome);
     
     // Define se o texto terá destaque (negrito) ou itálico
     const estiloTexto = descManual !== "" ? `<strong>${nomeParaExibir}</strong>` : `<em>${nomeParaExibir}</em>`;
