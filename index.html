@@ -1202,40 +1202,28 @@ async function criarSubcategoria() {
             if (document.getElementById('lbl-contador-gastos')) {
                 document.getElementById('lbl-contador-gastos').innerText = `Exibindo ${gastosFiltrados.length} de ${gastosMes.length} registros`;
             }
+gastosFiltrados.reverse().forEach(i => {
+    const categorias = appDados.categoriasEstruturadas || {};
+    const catPaiInfo = categorias[i.catPai] || { icone: "📦", nome: "Outros" };
+    const catSubInfo = (catPaiInfo.subcategorias && i.catSub) ? (catPaiInfo.subcategorias[i.catSub] || { icone: "🔹", nome: "" }) : { icone: "🔹", nome: "" };
+    
+    // 1. Lógica do texto (descrição ou subcategoria)
+    const descPreenchida = (i.desc || i.descricao || "").trim();
+    const nomeParaExibir = descPreenchida !== "" ? descPreenchida : (catSubInfo.nome || "Gasto");
+    const estiloTexto = descPreenchida !== "" ? `<strong>${nomeParaExibir}</strong>` : `<em>${nomeParaExibir}</em>`;
 
-            gastosFiltrados.reverse().forEach(i => {
-                const categorias = appDados.categoriasEstruturadas || {};
-                const catPaiInfo = categorias[i.catPai] || { icone: "📦", nome: "Outros" };
-                const catSubInfo = (catPaiInfo.subcategorias && i.catSub) ? (catPaiInfo.subcategorias[i.catSub] || { icone: "🔹", nome: "" }) : { icone: "🔹", nome: "" };
-                
-                const ehFuturo = i.data > hojeStr;
-                const li = document.createElement('li'); 
-                li.className = `history-item ${ehFuturo ? 'item-futuro-linha' : ''}`;
+    // 2. Renderização única (removido a duplicação)
+    const ehFuturo = i.data > hojeStr;
+    const li = document.createElement('li'); 
+    li.className = `history-item ${ehFuturo ? 'item-futuro-linha' : ''}`;
 
-                const descPreenchida = (i.desc || i.descricao || "").trim();
-                const nomeParaExibir = descPreenchida !== "" ? descPreenchida : (catSubInfo.nome || "Gasto");
-
-                // 2. Lógica para estilizar (deixa em itálico se foi gerado pela subcategoria)
-                const estiloTexto = descPreenchida !== "" ? `<strong>${nomeParaExibir}</strong>` : `<em>${nomeParaExibir}</em>`;
-
-                // 3. Renderização no HTML
-               const ehFuturo = i.data > hojeStr;
-               const li = document.createElement('li'); 
-               li.className = `history-item ${ehFuturo ? 'item-futuro-linha' : ''}`;
-
-               li.innerHTML = `<span>${catSubInfo.icone || "🔹"} ${estiloTexto} (${i.data.split('-')[2]}/${i.data.split('-')[1]}) ${ehFuturo ? '<span class="badge-futuro">Agendado</span>' : ''}</span>
-                <div class="actions-div"><span class="saldo-negativo">-${i.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</span>
-                <button class="btn-action" style="color:var(--info)" onclick="iniciarEdicaoGasto(${i.id})">✏️</button>
-                <button class="btn-action" onclick="excluirGasto(${i.id})">✕</button></div>`;
-                lGastos.appendChild(li);
-
-                li.innerHTML = `<span>${catSubInfo.icone || "🔹"} <strong>${textoExibir}</strong> (${i.data.split('-')[2]}/${i.data.split('-')[1]}) ${ehFuturo ? '<span class="badge-futuro">Agendado</span>' : ''}</span>
-                                <div class="actions-div"><span class="saldo-negativo">-${i.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</span>
-                                <button class="btn-action" style="color:var(--info)" onclick="iniciarEdicaoGasto(${i.id})">✏️</button>
-                                <button class="btn-action" onclick="excluirGasto(${i.id})">✕</button></div>`;
-                lGastos.appendChild(li);
-            });
-        }
+    li.innerHTML = `<span>${catSubInfo.icone || "🔹"} ${estiloTexto} (${i.data.split('-')[2]}/${i.data.split('-')[1]}) ${ehFuturo ? '<span class="badge-futuro">Agendado</span>' : ''}</span>
+                    <div class="actions-div"><span class="saldo-negativo">-${i.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</span>
+                    <button class="btn-action" style="color:var(--info)" onclick="iniciarEdicaoGasto(${i.id})">✏️</button>
+                    <button class="btn-action" onclick="excluirGasto(${i.id})">✕</button></div>`;
+    lGastos.appendChild(li);
+});
+         }
 
         if (typeof renderizarGraficos === "function") {
             renderizarGraficos();
