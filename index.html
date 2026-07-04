@@ -1204,15 +1204,24 @@ async function criarSubcategoria() {
             }
 gastosFiltrados.reverse().forEach(i => {
     const categorias = appDados.categoriasEstruturadas || {};
-    const catPaiInfo = categorias[i.catPai] || { icone: "📦", nome: "Outros" };
-    const catSubInfo = (catPaiInfo.subcategorias && i.catSub) ? (catPaiInfo.subcategorias[i.catSub] || { icone: "🔹", nome: "" }) : { icone: "🔹", nome: "" };
+    const catPaiInfo = categorias[i.catPai] || { nome: "Outros", icone: "📦" };
     
-    // 1. Lógica do texto (descrição ou subcategoria)
-    const descPreenchida = (i.desc || i.descricao || "").trim();
-    const nomeParaExibir = descPreenchida !== "" ? descPreenchida : (catSubInfo.nome || "Gasto");
-    const estiloTexto = descPreenchida !== "" ? `<strong>${nomeParaExibir}</strong>` : `<em>${nomeParaExibir}</em>`;
+    // Obtém a subcategoria com segurança
+    const subCats = catPaiInfo.subcategorias || {};
+    const catSubInfo = subCats[i.catSub] || { nome: "", icone: "🔹" };
+    
+    // --- LÓGICA CORRIGIDA ---
+    // 1. Prioriza a descrição manual digitada pelo usuário
+    // 2. Se for vazia, tenta o nome da subcategoria
+    // 3. Se tudo for vazio, cai em "Gasto"
+    const descManual = (i.desc || i.descricao || "").trim();
+    const nomeSub = (catSubInfo.nome || "").trim();
+    
+    let nomeParaExibir = descManual !== "" ? descManual : (nomeSub !== "" ? nomeSub : "Gasto");
+    
+    // Define se o texto terá destaque (negrito) ou itálico
+    const estiloTexto = descManual !== "" ? `<strong>${nomeParaExibir}</strong>` : `<em>${nomeParaExibir}</em>`;
 
-    // 2. Renderização única (removido a duplicação)
     const ehFuturo = i.data > hojeStr;
     const li = document.createElement('li'); 
     li.className = `history-item ${ehFuturo ? 'item-futuro-linha' : ''}`;
@@ -1223,7 +1232,7 @@ gastosFiltrados.reverse().forEach(i => {
                     <button class="btn-action" onclick="excluirGasto(${i.id})">✕</button></div>`;
     lGastos.appendChild(li);
 });
-         }
+        }
 
         if (typeof renderizarGraficos === "function") {
             renderizarGraficos();
