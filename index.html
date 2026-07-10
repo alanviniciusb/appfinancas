@@ -727,11 +727,16 @@ function atualizarSelectsCategorias() {
     const selectGastoPai = document.getElementById('gasto-cat-principal');
     const bkpPai = selectGastoPai.value;
     
-    // Limpa e adiciona a opção padrão (Placeholder)
     selectPai.innerHTML = '<option value="">Escolha Categoria Principal</option>';
     selectGastoPai.innerHTML = '<option value="">Escolha Categoria Principal</option>';
     
-    for (const [id, cat] of Object.entries(appDados.categoriasEstruturadas)) {
+    // Converte o objeto em array e ordena por ordem alfabética do nome
+    const categoriasOrdenadas = Object.entries(appDados.categoriasEstruturadas || {}).sort((a, b) => {
+        return a[1].nome.localeCompare(b[1].nome, 'pt-BR', { sensitivity: 'base' });
+    });
+    
+    // Iça as categorias já ordenadas
+    for (const [id, cat] of categoriasOrdenadas) {
         const opt = document.createElement('option'); 
         opt.value = id; 
         opt.innerText = `${cat.icone || "📁"} ${cat.nome}`;
@@ -740,30 +745,33 @@ function atualizarSelectsCategorias() {
         selectGastoPai.appendChild(opt);
     }
     
-    if(bkpPai && appDados.categoriasEstruturadas[bkpPai]) selectGastoPai.value = bkpPai;
+    if (bkpPai && appDados.categoriasEstruturadas[bkpPai]) selectGastoPai.value = bkpPai;
     
     listarCategoriasPaisGerenciamento(); 
     atualizarSelectSubcategorias();
 }
-
 function atualizarSelectSubcategorias() {
     const selectGastoPai = document.getElementById('gasto-cat-principal').value;
     const selectGastoSub = document.getElementById('gasto-subcategoria');
     
-    // Limpa e adiciona a opção padrão
     selectGastoSub.innerHTML = '<option value="">Escolha Subcategoria</option>';
     
     if (!selectGastoPai || !appDados.categoriasEstruturadas[selectGastoPai]) return;
     
-    const subcategorias = appDados.categoriasEstruturadas[selectGastoPai].subcategorias;
-    for (const [id, sub] of Object.entries(subcategorias)) {
+    const subcategorias = appDados.categoriasEstruturadas[selectGastoPai].subcategorias || {};
+    
+    // Converte o objeto de subcategorias em array e ordena alfabeticamente
+    const subcategoriasOrdenadas = Object.entries(subcategorias).sort((a, b) => {
+        return a[1].nome.localeCompare(b[1].nome, 'pt-BR', { sensitivity: 'base' });
+    });
+    
+    for (const [id, sub] of subcategoriasOrdenadas) {
         const opt = document.createElement('option'); 
         opt.value = id; 
-        opt.innerText = `${sub.icone} ${sub.nome}`;
+        opt.innerText = `${sub.icone || "🔹"} ${sub.nome}`;
         selectGastoSub.appendChild(opt);
     }
     
-    // A chamada abaixo continua existindo e não será omitida:
     listarSubcategoriasGerenciamento();
 }
     function atualizarFiltrosCategoriasBusca() {
