@@ -966,6 +966,7 @@ async function criarSubcategoria() {
     function iniciarEdicaoEntrada(id) {
         const item = appDados.entradas.find(i => i.id === id); if (!item) return;
         idEdicaoEntrada = id; document.getElementById('card-entrada').classList.add('editando-card');
+        document.getElementById('card-entrada').scrollIntoView({ behavior: 'smooth', block: 'start' });
         document.getElementById('titulo-entrada').innerText = "✏️ Editando Entrada";
         document.getElementById('renda-origem').value = item.origem;
         document.getElementById('renda-valor').value = formatarFloatParaMoedaInput(item.valor);
