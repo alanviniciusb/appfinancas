@@ -988,6 +988,7 @@ async function criarSubcategoria() {
     function iniciarEdicaoGasto(id) {
         const item = appDados.gastos.find(i => i.id === id); if (!item) return;
         idEdicaoGasto = id; document.getElementById('card-gasto').classList.add('editando-card');
+        document.getElementById('card-gasto').scrollIntoView({ behavior: 'smooth', block: 'start' });
         document.getElementById('titulo-gasto').innerText = "✏️ Editando Gasto";
         document.getElementById('gasto-nome').value = item.desc;
         document.getElementById('gasto-valor').value = formatarFloatParaMoedaInput(item.valor);
