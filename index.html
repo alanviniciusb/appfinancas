@@ -910,38 +910,58 @@ async function criarSubcategoria() {
     alert("💰 Entrada registrada com sucesso!"); 
 }
 async function adicionarGasto() {
-    const inputDesc = document.getElementById('gasto-nome'); 
+    const inputDesc = document.getElementById('gasto-nome');
     const inputValor = document.getElementById('gasto-valor');
-    const numParcelas = parseInt(document.getElementById('gasto-parcelas').value) || 1; 
-    const tipoRecorrencia = document.getElementById('gasto-recorrencia').value; // 'unico' ou 'mensal'
+    const selectPai = document.getElementById('gasto-cat-principal');
+    const selectSub = document.getElementById('gasto-subcategoria');
+    const inputData = document.getElementById('gasto-data');
+    
+    // CAPTURA CORRETA DO CAMPO DE RECORRÊNCIA
+    const campoRecorrencia = document.getElementById('gasto-recorrencia');
+    const tipoRecorrencia = campoRecorrencia ? campoRecorrencia.value : 'unico'; // ex: 'unico', '3', 'mensal'
 
     const valorTotal = converterMoedaParaFloat(inputValor.value);
-    const dataBase = new Date(document.getElementById('gasto-data').value + 'T00:00:00');
+    const dataBase = new Date(inputData.value + 'T00:00:00');
 
-    if (idEdicaoGasto !== null) {
-        // Lógica de edição permanece igual
-    } else {
-        const vezes = (tipoRecorrencia === 'mensal') ? 12 : numParcelas;
-        const valorPorVez = valorTotal / (tipoRecorrencia === 'mensal' ? 1 : numParcelas);
+    if (!selectPai.value || valorTotal <= 0) return alert('Campos inválidos.');
 
-        for (let i = 0; i < vezes; i++) {
-            let dataGasto = new Date(dataBase);
-            dataGasto.setMonth(dataGasto.getMonth() + i);
-            
-            appDados.gastos.push({
-                id: Date.now() + i,
-                desc: inputDesc.value.trim() || "Gasto",
-                valor: valorPorVez,
-                data: dataGasto.toISOString().split('T')[0],
-                catPai: document.getElementById('gasto-cat-principal').value,
-                catSub: document.getElementById('gasto-subcategoria').value
-            });
-        }
+    // LÓGICA PARA DEFINIR QUANTAS VEZES E QUAL O VALOR
+    let vezes = 1;
+    let valorPorVez = valorTotal;
+
+    if (tipoRecorrencia === 'mensal') {
+        vezes = 12; // Recorrente por 1 ano
+    } else if (tipoRecorrencia !== 'unico') {
+        vezes = parseInt(tipoRecorrencia); // Assume que o valor é o número de parcelas (ex: "3")
+        valorPorVez = valorTotal / vezes;
+    }
+
+    // CRIAÇÃO DOS REGISTROS
+    for (let i = 0; i < vezes; i++) {
+        let dataGasto = new Date(dataBase);
+        dataGasto.setMonth(dataGasto.getMonth() + i);
+
+        appDados.gastos.push({
+            id: Date.now() + i,
+            desc: `${inputDesc.value.trim() || "Gasto"}${tipoRecorrencia !== 'unico' ? ` (${i + 1}/${vezes})` : ''}`,
+            valor: valorPorVez,
+            data: dataGasto.toISOString().split('T')[0],
+            catPai: selectPai.value,
+            catSub: selectSub.value
+        });
     }
 
     await salvarNoDB();
+    
+    // Limpeza
+    inputDesc.value = '';
+    inputValor.value = '';
+    campoRecorrencia.value = 'unico';
+    selectPai.value = '';
+    selectSub.innerHTML = '';
+    
     atualizarTela();
-    alert("Registros salvos com sucesso!");
+    alert("💸 Gasto registrado com sucesso!");
 }
     function iniciarEdicaoEntrada(id) {
         const item = appDados.entradas.find(i => i.id === id); if (!item) return;
