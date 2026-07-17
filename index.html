@@ -917,36 +917,51 @@ async function criarSubcategoria() {
     const inputData = document.getElementById('gasto-data');
     const inputRecorrencia = document.getElementById('gasto-recorrencia');
     
-    const idPai = selectPai.value; 
-    const idSub = selectSub.value;
-    const valorTotalCalculado = converterMoedaParaFloat(inputValor.value); 
-    const dataOriginal = inputData.value || obterDataHoje();
-    const tipoRecorrencia = inputRecorrencia.value;
-    
-    if (!idPai || valorTotalCalculado <= 0) return alert('Campos inválidos.');
-    
-    // ... [MANTENHA A LÓGICA DE SALVAMENTO E RECORRÊNCIA QUE JÁ EXISTE NO SEU CÓDIGO] ...
-    const novoGasto = {
-        id: idEdicaoGasto !== null ? idEdicaoGasto : Date.now(),
-        desc: inputDesc.value.trim() || "Gasto",
-        valor: valorTotalCalculado,
-        data: dataOriginal,
-        catPai: idPai,
-        catSub: idSub
-    };
+  // --- ADICIONE ESTA LINHA PARA CAPTURAR O NOVO CAMPO ---
+        const numParcelas = parseInt(document.getElementById('gasto-parcelas').value) || 1; 
 
-    if (idEdicaoGasto !== null) {
-        const idx = appDados.gastos.findIndex(g => g.id === idEdicaoGasto);
-        if (idx !== -1) appDados.gastos[idx] = novoGasto;
-        cancelarEdicaoGasto();
-    } else {
-        // Lógica de Recorrência (simples)
-        appDados.gastos.push(novoGasto);
-        if (tipoRecorrencia !== 'unico') {
-            // Se precisar implementar recorrência complexa, adicione aqui
-            console.log("Recorrência detectada:", tipoRecorrencia);
+        const idPai = selectPai.value; 
+        const idSub = selectSub.value;
+        const valorTotalCalculado = converterMoedaParaFloat(inputValor.value); 
+        const dataOriginal = inputData.value || obterDataHoje();
+        
+        if (!idPai || valorTotalCalculado <= 0) return alert('Campos inválidos.');
+        
+        // --- AQUI COMEÇA A SUBSTITUIÇÃO DO BLOCO DE SALVAMENTO ---
+        if (idEdicaoGasto !== null) {
+            // Mantém a edição de um gasto único (se já existir)
+            const idx = appDados.gastos.findIndex(g => g.id === idEdicaoGasto);
+            if (idx !== -1) {
+                appDados.gastos[idx] = {
+                    id: idEdicaoGasto,
+                    desc: inputDesc.value.trim() || "Gasto",
+                    valor: valorTotalCalculado,
+                    data: dataOriginal,
+                    catPai: idPai,
+                    catSub: idSub
+                };
+            }
+            cancelarEdicaoGasto();
+        } else {
+            // Lógica de PARCELAMENTO para novos gastos
+            const valorParcela = valorTotalCalculado / numParcelas;
+
+            for (let i = 0; i < numParcelas; i++) {
+                let dataParcela = new Date(dataOriginal + 'T00:00:00'); // Garante que a data não mude o fuso
+                dataParcela.setMonth(dataParcela.getMonth() + i);
+                
+                const novoGasto = {
+                    id: Date.now() + i, 
+                    desc: `${inputDesc.value.trim() || "Gasto"} (${i + 1}/${numParcelas})`,
+                    valor: valorParcela,
+                    data: dataParcela.toISOString().split('T')[0],
+                    catPai: idPai,
+                    catSub: idSub
+                };
+                appDados.gastos.push(novoGasto);
+            }
         }
-    }
+        // --- AQUI TERMINA A SUBSTITUIÇÃO ---
     
 
     await salvarNoDB();
