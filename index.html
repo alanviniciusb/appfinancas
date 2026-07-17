@@ -920,11 +920,6 @@ async function criarSubcategoria() {
     const valorTotal = converterMoedaParaFloat(inputValor.value);
     const dataBase = new Date(inputData.value + 'T00:00:00');
     const tipo = campoRecorrencia.value; // ex: "unico", "fixo", "3", "12"
-    const idGrupo = Date.now(); // Um ID único para todas as parcelas deste "pacote"
-
-for (let i = 0; i < vezes; i++) {
-    let dataGasto = new Date(dataBase);
-    dataGasto.setMonth(dataGasto.getMonth() + i);   
 
     if (!selectPai.value || valorTotal <= 0) return alert('Campos inválidos.');
 
@@ -945,15 +940,14 @@ for (let i = 0; i < vezes; i++) {
         dataGasto.setMonth(dataGasto.getMonth() + i);
 
         appDados.gastos.push({
-        id: Date.now() + i + Math.random(), // ID único para a linha
-        groupId: idGrupo, // <--- O NOVO IDENTIFICADOR COMUM
-        desc: `${inputDesc.value.trim() || "Gasto"}${tipo !== 'unico' ? ` (${i + 1}/${vezes})` : ''}`,
-        valor: valorPorVez,
-        data: dataGasto.toISOString().split('T')[0],
-        catPai: selectPai.value,
-        catSub: selectSub.value
-    });
-}
+            id: Date.now() + i, // IDs únicos baseados no tempo + i
+            desc: `${inputDesc.value.trim() || "Gasto"}${tipo !== 'unico' ? ` (${i + 1}/${vezes})` : ''}`,
+            valor: valorPorVez,
+            data: dataGasto.toISOString().split('T')[0],
+            catPai: selectPai.value,
+            catSub: selectSub.value
+        });
+    }
 
     await salvarNoDB();
     
@@ -1026,31 +1020,12 @@ for (let i = 0; i < vezes; i++) {
         }
     }
 
-async function excluirGasto(id) {
-    const gasto = appDados.gastos.find(g => g.id === id);
-    if (!gasto) return;
-
-    // Se o gasto faz parte de um grupo, pergunta se quer excluir o grupo todo
-    if (gasto.groupId) {
-        const confirmarTudo = confirm("Este gasto faz parte de uma série/parcelamento.\n\nClique em 'OK' para excluir APENAS ESTA parcela.\nClique em 'CANCELAR' para excluir TODA A SÉRIE (todos os meses).");
-        
-        if (!confirmarTudo) {
-            // Excluir TODO o grupo
-            appDados.gastos = appDados.gastos.filter(g => g.groupId !== gasto.groupId);
-        } else {
-            // Excluir APENAS esta parcela
-            appDados.gastos = appDados.gastos.filter(g => g.id !== id);
-        }
-    } else {
-        // Gasto único, sem grupo
-        if (confirm("Excluir este gasto?")) {
-            appDados.gastos = appDados.gastos.filter(g => g.id !== id);
+    async function excluirGasto(id) {
+        if(confirm("Excluir este gasto?")) {
+            appDados.gastos = appDados.gastos.filter(i => i.id !== id);
+            await salvarNoDB(); atualizarTela();
         }
     }
-
-    await salvarNoDB();
-    atualizarTela();
-}
 
     function gerarFiltrosData() {
         const select = document.getElementById('filtro-mes-ano'); select.innerHTML = '';
