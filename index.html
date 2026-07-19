@@ -1212,6 +1212,11 @@ async function criarSubcategoria() {
                 return matchTexto && matchCategoria;
             });
             
+            gastosFiltrados.sort((a, b) => {
+    const dataCompare = new Date(a.data) - new Date(b.data);
+    if (dataCompare !== 0) return dataCompare;
+    return a.id - b.id; // Se a data for igual, mantém a ordem pelo ID original
+});
             if (document.getElementById('lbl-contador-gastos')) {
                 document.getElementById('lbl-contador-gastos').innerText = `Exibindo ${gastosFiltrados.length} de ${gastosMes.length} registros`;
             }
