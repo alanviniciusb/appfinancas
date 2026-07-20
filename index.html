@@ -909,7 +909,7 @@ async function criarSubcategoria() {
     atualizarTela();
     alert("💰 Entrada registrada com sucesso!"); 
 }
-   async function adicionarGasto() {
+async function adicionarGasto() {
     const inputDesc = document.getElementById('gasto-nome');
     const inputValor = document.getElementById('gasto-valor');
     const selectPai = document.getElementById('gasto-cat-principal');
@@ -919,29 +919,44 @@ async function criarSubcategoria() {
 
     const valorTotal = converterMoedaParaFloat(inputValor.value);
     const dataBase = new Date(inputData.value + 'T00:00:00');
-    const tipo = campoRecorrencia.value; // ex: "unico", "fixo", "3", "12"
+    const tipo = campoRecorrencia.value;
 
     if (!selectPai.value || valorTotal <= 0) return alert('Campos inválidos.');
 
-    // LÓGICA DE CÁLCULO
-    let vezes = 1;
-    let valorPorVez = valorTotal;
-
-    if (tipo === 'fixo') {
-        vezes = 12; // Define recorrência para 1 ano
-    } else if (tipo !== 'unico') {
-        vezes = parseInt(tipo);
-        valorPorVez = valorTotal / vezes;
+    // --- LÓGICA DE EDIÇÃO ---
+    if (idEdicaoGasto !== null) {
+        const idx = appDados.gastos.findIndex(i => i.id === idEdicaoGasto);
+        if (idx !== -1) {
+            // Atualiza o registro existente mantendo o ID e o Grupo
+            appDados.gastos[idx] = { 
+                ...appDados.gastos[idx], // Mantém groupId e outras propriedades
+                desc: inputDesc.value.trim() || "Gasto",
+                valor: valorTotal,
+                data: inputData.value,
+                catPai: selectPai.value,
+                catSub: selectSub.value
+            };
+        }
+        cancelarEdicaoGasto();
+        await salvarNoDB();
+        atualizarTela();
+        alert("✅ Gasto atualizado com sucesso!");
+        return; // Sai da função aqui, pois a edição terminou
     }
 
-    // CRIAÇÃO DOS REGISTROS
+    // --- LÓGICA DE CRIAÇÃO (SÓ EXECUTA SE NÃO FOR EDIÇÃO) ---
+    const novoGroupId = Date.now();
+    let vezes = (tipo === 'fixo') ? 12 : (tipo === 'unico' ? 1 : parseInt(tipo));
+    let valorPorVez = (tipo === 'unico' || tipo === 'fixo') ? valorTotal : (valorTotal / vezes);
+
     for (let i = 0; i < vezes; i++) {
         let dataGasto = new Date(dataBase);
         dataGasto.setMonth(dataGasto.getMonth() + i);
 
         appDados.gastos.push({
-            id: Date.now() + i, // IDs únicos baseados no tempo + i
-            desc: `${inputDesc.value.trim() || "Gasto"}${tipo !== 'unico' ? ` (${i + 1}/${vezes})` : ''}`,
+            id: Date.now() + i,
+            groupId: novoGroupId,
+            desc: `${inputDesc.value.trim() || "Gasto"}${vezes > 1 ? ` (${i + 1}/${vezes})` : ''}`,
             valor: valorPorVez,
             data: dataGasto.toISOString().split('T')[0],
             catPai: selectPai.value,
